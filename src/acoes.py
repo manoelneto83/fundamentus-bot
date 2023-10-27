@@ -11,6 +11,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 import pandas as pd
 import math
+from selenium.webdriver.common.action_chains import ActionChains
 
 ATIVO_COLUMN = 'Papel'
 COTACAO_COLUMN = 'Cotação'
@@ -20,7 +21,7 @@ ROIC_COLUMN = 'ROIC'
 ROE_COLUMN = 'ROE'
 PL_COLUMN = 'P/L'
 PSR_COLUMN = 'PSR'
-PATRIMONIO_LIQUIDO_COLUMN = 'Patrim. Líq'
+PATRIMONIO_LIQUIDO_COLUMN = 'Liq.2meses'
 VPA_COLUMN = 'vpa'
 LPA_COLUMN = 'lpa'
 MARGEM_LIQ_COLUMN = 'Mrg. Líq.'
@@ -29,15 +30,18 @@ LIQ_CORRENTE_COLUMN = 'Liq. Corr.'
 DIV_BRUTA_PATRIM_COLUMN = 'Dív.Brut/ Patrim.'
 CRESC_RECEITA_5A = 'Cresc. Rec.5a'
 GRAHAM_COLUMN = 'valor_justo_graham'
+BAZIN_COLUMN = 'preco_teto_bazin'
+MARGEM_SEGURANCA_BAZIN = 'margem_seguranca_bazin'
 POTENCIAL_GRAHAM_COLUMN = 'potencial_graham'
 EV_EBIT_COLUMN = 'EV/EBIT'
-EV_EBITDA_COLUMN= 'EV/EBITDA'
+EV_EBITDA_COLUMN = 'EV/EBITDA'
 P_EBIT_COLUMN = 'P/EBIT'
 SEGMENTO_COLUMN = 'segmento'
 RANK_DY_COLUMN = 'rank_dy'
-RANK_ROE_COLUMN = 'rank_roe' 
-RANK_ROIC_COLUMN = 'rank_roic' 
+RANK_ROE_COLUMN = 'rank_roe'
+RANK_ROIC_COLUMN = 'rank_roic'
 RANK_POTENCIAL_GRAHAM_COLUMN = 'rank_potencial_graham'
+RANK_MARGEM_SEGURANCA_BAZIN_COLUMN = 'rank_margem_seguranca_bazin'
 RANK_PVP_COLUMN = 'rank_pvp'
 RANK_PL_COLUMN = 'rank_pl'
 RANK_MARGEM_LIQ = 'rank_margem_liq'
@@ -80,11 +84,11 @@ def execute():
         'xpath', '/html/body/div[1]/div[2]/table')
 
     html_tabela = tabela_elemento.get_attribute('outerHTML')
-    
+
     tabela = pd.read_html(str(html_tabela))[0]
-    tabela[COTACAO_COLUMN] = tabela[COTACAO_COLUMN]/ 100
-    tabela[LIQ_CORRENTE_COLUMN] = tabela[LIQ_CORRENTE_COLUMN]/ 100
-    tabela[DIV_BRUTA_PATRIM_COLUMN] = tabela[DIV_BRUTA_PATRIM_COLUMN]/ 100
+    tabela[COTACAO_COLUMN] = tabela[COTACAO_COLUMN] / 100
+    tabela[LIQ_CORRENTE_COLUMN] = tabela[LIQ_CORRENTE_COLUMN] / 100
+    tabela[DIV_BRUTA_PATRIM_COLUMN] = tabela[DIV_BRUTA_PATRIM_COLUMN] / 100
     # tabela[EV_EBIT_COLUMN] = tabela[EV_EBIT_COLUMN]/ 100
     # tabela[EV_EBITDA_COLUMN] = tabela[EV_EBITDA_COLUMN]/ 100
     # tabela[P_EBIT_COLUMN] = tabela[P_EBIT_COLUMN]/ 100
@@ -106,16 +110,19 @@ def execute():
                                 EV_EBIT_COLUMN,
                                 EV_EBITDA_COLUMN,
                                 P_EBIT_COLUMN
-                                ]]
+                                 ]]
 
     tabela_customizada[VPA_COLUMN] = 0.0
     tabela_customizada[LPA_COLUMN] = 0.0
     tabela_customizada[GRAHAM_COLUMN] = 0.0
+    tabela_customizada[BAZIN_COLUMN] = 0.0
     tabela_customizada[POTENCIAL_GRAHAM_COLUMN] = 0.0
+    tabela_customizada[MARGEM_SEGURANCA_BAZIN] = 0.0
     tabela_customizada[RANK_DY_COLUMN] = 0.0
     tabela_customizada[RANK_ROE_COLUMN] = 0.0
     tabela_customizada[RANK_ROIC_COLUMN] = 0.0
     tabela_customizada[RANK_POTENCIAL_GRAHAM_COLUMN] = 0.0
+    tabela_customizada[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN] = 0.0
     tabela_customizada[RANK_PVP_COLUMN] = 0.0
     tabela_customizada[RANK_PL_COLUMN] = 0.0
     tabela_customizada[RANK_MARGEM_LIQ] = 0.0
@@ -130,27 +137,41 @@ def execute():
     tabela_customizada[RANK_RESULT] = 0.0
     tabela_customizada[SEGMENTO_COLUMN] = ''
 
-    
     tabela_customizada.set_index(ATIVO_COLUMN)
     # print(tabela_customizada)
-    # Primeiro, remova os pontos da coluna de liquidez e converta para float
-    tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN] = formatar_valor(tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN])
-    tabela_customizada[PL_COLUMN] = formatar_valor(tabela_customizada[PL_COLUMN])
-    tabela_customizada[PSR_COLUMN] = formatar_valor(tabela_customizada[PSR_COLUMN])
-    tabela_customizada[EV_EBIT_COLUMN] = formatar_valor(tabela_customizada[EV_EBIT_COLUMN])
-    tabela_customizada[EV_EBITDA_COLUMN] = formatar_valor(tabela_customizada[EV_EBITDA_COLUMN])
-    tabela_customizada[P_EBIT_COLUMN] = formatar_valor(tabela_customizada[P_EBIT_COLUMN])
+#################################################################################################################
+    # tratando dados
+#################################################################################################################
+    tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN] = formatar_valor(
+        tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN])
+    tabela_customizada[PL_COLUMN] = formatar_valor(
+        tabela_customizada[PL_COLUMN])
+    tabela_customizada[PSR_COLUMN] = formatar_valor(
+        tabela_customizada[PSR_COLUMN])
+    tabela_customizada[EV_EBIT_COLUMN] = formatar_valor(
+        tabela_customizada[EV_EBIT_COLUMN])
+    tabela_customizada[EV_EBITDA_COLUMN] = formatar_valor(
+        tabela_customizada[EV_EBITDA_COLUMN])
+    tabela_customizada[P_EBIT_COLUMN] = formatar_valor(
+        tabela_customizada[P_EBIT_COLUMN])
     # print(tabela_customizada)
     # Primeiro, substitua a virgula por ponto e remova o sinal de % e converta para float
-    tabela_customizada[DY_COLUMN] = formatar_valor_percent(tabela_customizada[DY_COLUMN])
-    tabela_customizada[ROIC_COLUMN] = formatar_valor_percent(tabela_customizada[ROIC_COLUMN])
-    tabela_customizada[ROE_COLUMN] = formatar_valor_percent(tabela_customizada[ROE_COLUMN])
-    tabela_customizada[MARGEM_EBIT_COLUMN] = formatar_valor_percent(tabela_customizada[MARGEM_EBIT_COLUMN])
-    tabela_customizada[MARGEM_LIQ_COLUMN] = formatar_valor_percent(tabela_customizada[MARGEM_LIQ_COLUMN])
-    tabela_customizada[CRESC_RECEITA_5A] = formatar_valor_percent(tabela_customizada[CRESC_RECEITA_5A])
-
-
+    tabela_customizada[DY_COLUMN] = formatar_valor_percent(
+        tabela_customizada[DY_COLUMN])
+    tabela_customizada[ROIC_COLUMN] = formatar_valor_percent(
+        tabela_customizada[ROIC_COLUMN])
+    tabela_customizada[ROE_COLUMN] = formatar_valor_percent(
+        tabela_customizada[ROE_COLUMN])
+    tabela_customizada[MARGEM_EBIT_COLUMN] = formatar_valor_percent(
+        tabela_customizada[MARGEM_EBIT_COLUMN])
+    tabela_customizada[MARGEM_LIQ_COLUMN] = formatar_valor_percent(
+        tabela_customizada[MARGEM_LIQ_COLUMN])
+    tabela_customizada[CRESC_RECEITA_5A] = formatar_valor_percent(
+        tabela_customizada[CRESC_RECEITA_5A])
+#################################################################################################################
     # Filtros
+#################################################################################################################
+    tabela_filtro_pvp = tabela_customizada[tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN] >= 1000000]
     tabela_filtro_pvp = tabela_customizada[tabela_customizada[PVP_COLUMN] <= 900]
     tabela_filtro_roe = tabela_filtro_pvp[tabela_filtro_pvp[ROE_COLUMN] >= 13]
     tabela_filtro_roic = tabela_filtro_roe[tabela_filtro_roe[ROIC_COLUMN] >= 0]
@@ -161,32 +182,42 @@ def execute():
 
     # ALGUNS SETORES COMO BANCARIOS E SEGUROS TEM ESSE INDICADOR = 0
     tabela_filtro_margem_liq = tabela_filtro_psr[tabela_filtro_psr[MARGEM_LIQ_COLUMN] >= 0]
-    tabela_filtro_margem_ebit = tabela_filtro_margem_liq[tabela_filtro_margem_liq[MARGEM_EBIT_COLUMN] >= 0]
+    tabela_filtro_margem_ebit = tabela_filtro_margem_liq[
+        tabela_filtro_margem_liq[MARGEM_EBIT_COLUMN] >= 0]
     tabela_filtro_p_ebit = tabela_filtro_margem_ebit[tabela_filtro_margem_ebit[P_EBIT_COLUMN] <= 10]
 
     tabela_filtro_dy = tabela_filtro_p_ebit[tabela_filtro_p_ebit[DY_COLUMN] >= 4]
 
-    # tabela_filtro_dy = tabela_filtro_dy.head(10)
+    # tabela_filtro_dy = tabela_filtro_dy.head(2)
+    remove_tasa(tabela_filtro_dy)
 
     for index, row in tabela_filtro_dy.iterrows():
         ativo = row[ATIVO_COLUMN]
         print(ativo)
-        # navegador = openChrome()
         baseUrl = "https://statusinvest.com.br/acoes/{}"
         baseurl = baseUrl.format(ativo)
         print(baseurl)
         navegador.get(baseurl)
         try:
-            preco_justo = float(preco_justo_graham(navegador, index, tabela_filtro_dy))
+            preco_justo = float(preco_justo_graham(
+                navegador, index, tabela_filtro_dy))
             # print(f"preco_justo-> {preco_justo}")
             # print(f"preco_justo type-> {type(preco_justo)}")
             # print(f"cotacao -> {row['Cotação']}")
-            # print(f"cotacao type -> {type(row['Cotação'])}")
+            print(f"cotacao type -> {type(row['Cotação'])}")
             # print(f"calculo -> {(preco_justo/row['Cotação'])}")
-            tabela_filtro_dy.at[index, SEGMENTO_COLUMN] = getSegmentoEmpresa(navegador)
+            tabela_filtro_dy.at[index,
+                                SEGMENTO_COLUMN] = getSegmentoEmpresa(navegador)
             tabela_filtro_dy.at[index, GRAHAM_COLUMN] = preco_justo
             potencial = ((preco_justo/row[COTACAO_COLUMN])*100)-100
-            tabela_filtro_dy.at[index, POTENCIAL_GRAHAM_COLUMN] = format2decimal(potencial)
+            tabela_filtro_dy.at[index, POTENCIAL_GRAHAM_COLUMN] = format2decimal(
+                potencial)
+            teto_bazin = format2decimal(preco_teto_bazim(navegador))
+            print(f"bazin preco teto -> {teto_bazin}")
+            tabela_filtro_dy.at[index, BAZIN_COLUMN] = teto_bazin
+            tabela_filtro_dy.at[index,
+                                MARGEM_SEGURANCA_BAZIN] = teto_bazin - row[COTACAO_COLUMN]
+            print(f"mergem bazin -> {teto_bazin - row[COTACAO_COLUMN]}")
 
         except Exception as err:
             imprimir(f"Ocorreu um erro: {err}")
@@ -195,70 +226,110 @@ def execute():
 
     print(f"potencial type -> {type(row[POTENCIAL_GRAHAM_COLUMN])}")
 
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(by=DY_COLUMN, ascending=False)
-    tabela_filtro_dy[RANK_DY_COLUMN] = tabela_filtro_dy[DY_COLUMN].rank(ascending=False)    
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=DY_COLUMN, ascending=False)
+    tabela_filtro_dy[RANK_DY_COLUMN] = tabela_filtro_dy[DY_COLUMN].rank(
+        ascending=False)
 
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(by=ROE_COLUMN, ascending=False)
-    tabela_filtro_dy[RANK_ROE_COLUMN] = tabela_filtro_dy[ROE_COLUMN].rank(ascending=False)   
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=ROE_COLUMN, ascending=False)
+    tabela_filtro_dy[RANK_ROE_COLUMN] = tabela_filtro_dy[ROE_COLUMN].rank(
+        ascending=False)
 
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(by=ROIC_COLUMN, ascending=False)
-    tabela_filtro_dy[RANK_ROIC_COLUMN] = tabela_filtro_dy[ROIC_COLUMN].rank(ascending=False)   
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=ROIC_COLUMN, ascending=False)
+    tabela_filtro_dy[RANK_ROIC_COLUMN] = tabela_filtro_dy[ROIC_COLUMN].rank(
+        ascending=False)
 
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(by=POTENCIAL_GRAHAM_COLUMN, ascending=False)
-    tabela_filtro_dy[RANK_POTENCIAL_GRAHAM_COLUMN] = tabela_filtro_dy[POTENCIAL_GRAHAM_COLUMN].rank(ascending=False)  
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=POTENCIAL_GRAHAM_COLUMN, ascending=False)
+    tabela_filtro_dy[RANK_POTENCIAL_GRAHAM_COLUMN] = tabela_filtro_dy[POTENCIAL_GRAHAM_COLUMN].rank(
+        ascending=False)
 
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(by=LIQ_CORRENTE_COLUMN, ascending=False)
-    tabela_filtro_dy[RANK_LIQ_CORRENTE] = tabela_filtro_dy[LIQ_CORRENTE_COLUMN].rank(ascending=False)  
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=LIQ_CORRENTE_COLUMN, ascending=False)
+    tabela_filtro_dy[RANK_LIQ_CORRENTE] = tabela_filtro_dy[LIQ_CORRENTE_COLUMN].rank(
+        ascending=False)
 
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(by=MARGEM_LIQ_COLUMN, ascending=False)
-    tabela_filtro_dy[RANK_MARGEM_LIQ] = tabela_filtro_dy[MARGEM_LIQ_COLUMN].rank(ascending=False)  
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=MARGEM_LIQ_COLUMN, ascending=False)
+    tabela_filtro_dy[RANK_MARGEM_LIQ] = tabela_filtro_dy[MARGEM_LIQ_COLUMN].rank(
+        ascending=False)
 
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(by=CRESC_RECEITA_5A, ascending=False)
-    tabela_filtro_dy[RANK_CRESC_RECEITA_5A] = tabela_filtro_dy[CRESC_RECEITA_5A].rank(ascending=False)  
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=CRESC_RECEITA_5A, ascending=False)
+    tabela_filtro_dy[RANK_CRESC_RECEITA_5A] = tabela_filtro_dy[CRESC_RECEITA_5A].rank(
+        ascending=False)
 
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(by=MARGEM_EBIT_COLUMN, ascending=False)
-    tabela_filtro_dy[RANK_MARGEM_EBIT] = tabela_filtro_dy[MARGEM_EBIT_COLUMN].rank(ascending=False)  
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=MARGEM_EBIT_COLUMN, ascending=False)
+    tabela_filtro_dy[RANK_MARGEM_EBIT] = tabela_filtro_dy[MARGEM_EBIT_COLUMN].rank(
+        ascending=False)
 
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(by=PVP_COLUMN, ascending=True)
-    tabela_filtro_dy[RANK_PVP_COLUMN] = tabela_filtro_dy[PVP_COLUMN].rank(ascending=True)  
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=MARGEM_SEGURANCA_BAZIN, ascending=False)
+    tabela_filtro_dy[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN] = tabela_filtro_dy[MARGEM_SEGURANCA_BAZIN].rank(
+        ascending=False)
 
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(by=PL_COLUMN, ascending=True)
-    tabela_filtro_dy[RANK_PL_COLUMN] = tabela_filtro_dy[PL_COLUMN].rank(ascending=True)  
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=PVP_COLUMN, ascending=True)
+    tabela_filtro_dy[RANK_PVP_COLUMN] = tabela_filtro_dy[PVP_COLUMN].rank(
+        ascending=True)
 
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(by=DIV_BRUTA_PATRIM_COLUMN, ascending=True)
-    tabela_filtro_dy[RANK_DIV_BRUTA_PATRIM] = tabela_filtro_dy[DIV_BRUTA_PATRIM_COLUMN].rank(ascending=True)  
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=PL_COLUMN, ascending=True)
+    tabela_filtro_dy[RANK_PL_COLUMN] = tabela_filtro_dy[PL_COLUMN].rank(
+        ascending=True)
 
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(by=EV_EBIT_COLUMN, ascending=True)
-    tabela_filtro_dy[RANK_EV_EBIT] = tabela_filtro_dy[EV_EBIT_COLUMN].rank(ascending=True)  
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=DIV_BRUTA_PATRIM_COLUMN, ascending=True)
+    tabela_filtro_dy[RANK_DIV_BRUTA_PATRIM] = tabela_filtro_dy[DIV_BRUTA_PATRIM_COLUMN].rank(
+        ascending=True)
 
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(by=EV_EBITDA_COLUMN, ascending=True)
-    tabela_filtro_dy[RANK_EV_EBITDA] = tabela_filtro_dy[EV_EBITDA_COLUMN].rank(ascending=True)  
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=EV_EBIT_COLUMN, ascending=True)
+    tabela_filtro_dy[RANK_EV_EBIT] = tabela_filtro_dy[EV_EBIT_COLUMN].rank(
+        ascending=True)
 
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(by=P_EBIT_COLUMN, ascending=True)
-    tabela_filtro_dy[RANK_P_EBIT] = tabela_filtro_dy[P_EBIT_COLUMN].rank(ascending=True)  
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=EV_EBITDA_COLUMN, ascending=True)
+    tabela_filtro_dy[RANK_EV_EBITDA] = tabela_filtro_dy[EV_EBITDA_COLUMN].rank(
+        ascending=True)
 
-    tabela_filtro_dy[RANK_RESULT]  = tabela_filtro_dy[RANK_DY_COLUMN] + tabela_filtro_dy[RANK_ROE_COLUMN] + tabela_filtro_dy[RANK_ROIC_COLUMN] + tabela_filtro_dy[RANK_POTENCIAL_GRAHAM_COLUMN] + tabela_filtro_dy[RANK_PVP_COLUMN] + tabela_filtro_dy[RANK_PL_COLUMN] + tabela_filtro_dy[RANK_LIQ_CORRENTE] + tabela_filtro_dy[RANK_MARGEM_LIQ] + tabela_filtro_dy[RANK_CRESC_RECEITA_5A] + tabela_filtro_dy[RANK_DIV_BRUTA_PATRIM] + tabela_filtro_dy[RANK_MARGEM_EBIT] + tabela_filtro_dy[RANK_EV_EBIT] + tabela_filtro_dy[RANK_EV_EBITDA] + tabela_filtro_dy[P_EBIT_COLUMN]
-    nome_arquivo_csv = 'meu_dataframe_acoes.csv'
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=P_EBIT_COLUMN, ascending=True)
+    tabela_filtro_dy[RANK_P_EBIT] = tabela_filtro_dy[P_EBIT_COLUMN].rank(
+        ascending=True)
+
+    tabela_filtro_dy[RANK_RESULT] = tabela_filtro_dy[RANK_DY_COLUMN] + tabela_filtro_dy[RANK_ROE_COLUMN] + tabela_filtro_dy[RANK_ROIC_COLUMN] + tabela_filtro_dy[RANK_POTENCIAL_GRAHAM_COLUMN] + tabela_filtro_dy[RANK_PVP_COLUMN] + tabela_filtro_dy[RANK_PL_COLUMN] + tabela_filtro_dy[RANK_LIQ_CORRENTE] + \
+        tabela_filtro_dy[RANK_MARGEM_LIQ] + tabela_filtro_dy[RANK_CRESC_RECEITA_5A] + tabela_filtro_dy[RANK_DIV_BRUTA_PATRIM] + tabela_filtro_dy[RANK_MARGEM_EBIT] + \
+        tabela_filtro_dy[RANK_EV_EBIT] + tabela_filtro_dy[RANK_EV_EBITDA] + \
+        tabela_filtro_dy[P_EBIT_COLUMN] + \
+        tabela_filtro_dy[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN]
 
     # # # Use o método to_csv para exportar o DataFrame para um arquivo CSV
+    nome_arquivo_csv = 'meu_dataframe_acoes.csv'
     tabela_filtro_dy.to_csv(nome_arquivo_csv, index=False,  decimal=',')
 
     print(tabela_filtro_dy)
     print(f"rows: {tabela_filtro_dy.shape[0]}")
 
 
-
 def formatar_valor(valor):
     # Remove todos os pontos e vírgulas da string
-    valor_formatado = valor.str.replace('.', '').str.replace(',', '').astype(float) / 100
-    
+    valor_formatado = valor.str.replace(
+        '.', '').str.replace(',', '').astype(float) / 100
+
     return valor_formatado
+
 
 def formatar_valor_percent(valor):
     # Remove todos os pontos e vírgulas da string
-    valor_formatado = valor.str.replace('.', '').str.replace(',', '').str.replace('%', '').astype(float) / 100
-    
+    valor_formatado = valor.str.replace('.', '').str.replace(
+        ',', '').str.replace('%', '').astype(float) / 100
+
     return valor_formatado
+
 
 def preco_justo_graham(navegador, index, tabela_filtro_dy):
     print(f"antes passei aqui manoel {navegador}")
@@ -295,20 +366,129 @@ def preco_justo_graham(navegador, index, tabela_filtro_dy):
 
     print(f"raiz-> {raiz}")
     valor_formatado = format2decimal(raiz)
-    print(f"raiz valor_formatado -> {valor_formatado}") 
+    print(f"raiz valor_formatado -> {valor_formatado}")
     return valor_formatado
+
 
 def format2decimal(valor):
     return float("{:.2f}".format(valor))
 
+
 def getSegmentoEmpresa(navegador):
-        return navegador.find_element(
+    return navegador.find_element(
         'xpath', '/html/body/main/div[5]/div[1]/div/div[3]/div/div[3]/div/div/div/a/strong').text
 
-    
+
+def preco_teto_bazim(navegador):
+
+    botao_5anos = navegador.find_element(
+        'xpath', '/html/body/main/div[3]/div/div[1]/div/div[1]/div[2]/ul/li[2]/a')
+    navegador.execute_script("arguments[0].scrollIntoView(true);", botao_5anos)
+    time.sleep(1)
+
+    navegador.execute_script("arguments[0].click();", botao_5anos)
+    time.sleep(1)
+    botao_agruparPorAno = navegador.find_element(
+        'xpath', '/html/body/main/div[3]/div/div[1]/div/div[5]/label/span[2]')
+
+    navegador.execute_script(
+        "arguments[0].click();", botao_agruparPorAno)
+
+    # Use ActionChains para mover o mouse sobre o elemento (hover)
+    time.sleep(0.5)
+    print(pyautogui.position())
+    print(botao_agruparPorAno.location)
+    x = 896
+    y = 458
+    # movendo o mouse para o grafico ano atual -1 e obtendo o devidendo desse ano
+    pyautogui.moveTo(x, y, 0.5, pyautogui.easeOutQuad)
+
+    dividendo_ano_menos_1 = navegador.find_element(
+        'xpath', '/html/body/main/div[3]/div/div[1]/div/div[3]/div/div/div[2]/span[1]').text
+    print(dividendo_ano_menos_1)
+
+    # movendo o mouse para o grafico ano atual -2 e obtendo o devidendo desse ano
+    pyautogui.moveTo(712, y, 0.5, pyautogui.easeOutQuad)
+    time.sleep(0.5)
+    dividendo_ano_menos_2 = navegador.find_element(
+        'xpath', '/html/body/main/div[3]/div/div[1]/div/div[3]/div/div/div[2]/span[1]').text
+    print(dividendo_ano_menos_2)
+
+    # movendo o mouse para o grafico ano atual -3 e obtendo o devidendo desse ano
+    pyautogui.moveTo(500, y, 0.5, pyautogui.easeOutQuad)
+    time.sleep(0.5)
+    dividendo_ano_menos_3 = navegador.find_element(
+        'xpath', '/html/body/main/div[3]/div/div[1]/div/div[3]/div/div/div[2]/span[1]').text
+    print(dividendo_ano_menos_3)
+
+    # movendo o mouse para o grafico ano atual -4 e obtendo o devidendo desse ano
+    pyautogui.moveTo(280, y, 0.5, pyautogui.easeOutQuad)
+    time.sleep(0.5)
+    dividendo_ano_menos_4 = navegador.find_element(
+        'xpath', '/html/body/main/div[3]/div/div[1]/div/div[3]/div/div/div[2]/span[1]').text
+    print(dividendo_ano_menos_4)
+    time.sleep(0.5)
+    dividendo_ano_menos_1 = dividendo_ano_menos_1.replace(
+        "R$ ", "").replace(",", ".")
+    dividendo_ano_menos_2 = dividendo_ano_menos_2.replace(
+        "R$ ", "").replace(",", ".")
+    dividendo_ano_menos_3 = dividendo_ano_menos_3.replace(
+        "R$ ", "").replace(",", ".")
+    dividendo_ano_menos_4 = dividendo_ano_menos_4.replace(
+        "R$ ", "").replace(",", ".")
+
+    dividendo_ano_menos_1 = float(dividendo_ano_menos_1 or 0)
+    dividendo_ano_menos_2 = float(dividendo_ano_menos_2 or 0)
+    dividendo_ano_menos_3 = float(dividendo_ano_menos_3 or 0)
+    dividendo_ano_menos_4 = float(dividendo_ano_menos_4 or 0)
+
+    print(dividendo_ano_menos_1)
+    print(dividendo_ano_menos_2)
+    print(dividendo_ano_menos_3)
+    print(dividendo_ano_menos_4)
+
+    soma_dividendos = (dividendo_ano_menos_1 + dividendo_ano_menos_2 +
+                       dividendo_ano_menos_3 + dividendo_ano_menos_4)
+
+    qtde_anos = 0
+    if (dividendo_ano_menos_1 > 0):
+        qtde_anos = qtde_anos + 1
+
+    if (dividendo_ano_menos_2 > 0):
+        qtde_anos = qtde_anos + 1
+
+    if (dividendo_ano_menos_3 > 0):
+        qtde_anos = qtde_anos + 1
+
+    if (dividendo_ano_menos_4 > 0):
+        qtde_anos = qtde_anos + 1
+
+    print(f"qtde_anos-> {qtde_anos}")
+    print(f"soma_dividendos-> {soma_dividendos}")
+    media_dividendos = soma_dividendos / qtde_anos
+    print(f"media_dividendos-> {media_dividendos}")
+
+    metrica_barsi = 0.06
+
+    preco_teto = media_dividendos / metrica_barsi
+    # preco_teto = preco_teto.replace(".", ",")
+
+    print(f"preco_teto-> {preco_teto}")
+
+    return preco_teto
+
+def remove_tasa(df):
+    for index, row in df.iterrows():
+        ativo = row[ATIVO_COLUMN]
+        print(ativo)
+        # removendo a tauros
+        if ativo == 'TASA4':
+            df = df.drop(index)        
+        if ativo == 'TASA3':
+            df = df.drop(index)        
+
 
 execute()
 
 
 # A formula magica no mercado de ações - Joel oWarnei yuld alterado
-

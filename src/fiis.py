@@ -116,7 +116,7 @@ fiis_dy_maior_que_6_perc_ordenado_pvp['metodo2em1'] = (
 resultado = fiis_dy_maior_que_6_perc_ordenado_pvp.sort_values(
     by='metodo2em1', ascending=True)
 
-nome_arquivo_csv = 'meu_dataframe.csv'
+nome_arquivo_csv = 'meu_dataframe_fiis.csv'
 
 # Use o método to_csv para exportar o DataFrame para um arquivo CSV
 resultado.to_csv(nome_arquivo_csv, index=False,  decimal=',')
