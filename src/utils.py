@@ -11,7 +11,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-
+from os import environ, path, curdir
+from dotenv import load_dotenv
 # pyautogui.click -> clicar
 # pyautogui.press -> apertar 1 tecla
 # pyautogui.hotkey -> conjunto de teclas
@@ -36,17 +37,17 @@ from webdriver_manager.chrome import ChromeDriverManager
 # melhorar funcao de wait para esperar por algumas tentativas.
 
 # configurando os logs
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(message)s',
-                    filename=f"./logs/{datetime.datetime.now().strftime('%Y-%m-%d %Hh%Mm%Ss')}-xerife.logs",
-                    filemode="w")
+# logging.basicConfig(level=logging.DEBUG,
+#                     format='%(asctime)s - %(message)s',
+#                     filename=f"./logs/{datetime.datetime.now().strftime('%Y-%m-%d %Hh%Mm%Ss')}-xerife.logs",
+#                     filemode="w")
 
 # imprimi uma mensagem na ela
 
 
 def imprimir(mensagem):
-    logging.debug("====================================")
-    logging.debug(mensagem)
+    # logging.debug("====================================")
+    # logging.debug(mensagem)
     print("====================================")
     print(mensagem)
     # print("====================================")
@@ -109,9 +110,15 @@ def send_to_clipboard(filePath):
 
 
 def openChrome():
+    # Find .env file
+    basedir = path.abspath(curdir)
+    load_dotenv(path.join(basedir, '.env'))
+
+    path_web_driver = environ.get('PATH_WEB_DRIVER')
+
     options = Options()
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    navegador = webdriver.Chrome(executable_path=r"D:\cursos\chrome_driver\chromedriver.exe", chrome_options=options, service=Service(
+    navegador = webdriver.Chrome(executable_path=path_web_driver, chrome_options=options, service=Service(
         ChromeDriverManager().install()))  # openChrome()
     time.sleep(0.5)
     navegador.maximize_window()

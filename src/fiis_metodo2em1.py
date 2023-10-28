@@ -6,6 +6,7 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 import pandas as pd
+import argparse
 
 ATIVO_COLUMN = 'Papel'
 SEGMENTO_COLUMN = 'Segmento'
@@ -22,7 +23,22 @@ QTDE_IMOVEIS = 'Qtd de imóveis'
 # Outros
 # Shoppings
 # Títulos e Val. Mob.
+
+
 def execute():
+    # Criação do parser para os argumentos
+    parser = argparse.ArgumentParser(
+        description='Exemplo de script com argumentos via linha de comando')
+    parser.add_argument('--liq', type=float,
+                        help='Valor para liquidez', default=500000)
+    parser.add_argument('--dy', type=float, help='Valor para DY', default=6)
+
+    # Parse dos argumentos da linha de comando
+    args = parser.parse_args()
+
+    # Exibição dos argumentos recebidos
+    print("Valor de liquidez:", args.liq)
+    print("Valor de DY:", args.dy)
     # Marca o tempo de início
     inicioTempo = time.time()
 
@@ -59,7 +75,6 @@ def execute():
                                 QTDE_IMOVEIS]]
 
     tabela_customizada.set_index(ATIVO_COLUMN)
-    # print(tabela_customizada)
     # Primeiro, remova os pontos da coluna de liquidez e converta para float
     tabela_customizada[LIQUIDEZ_COLUMN] = tabela_customizada[LIQUIDEZ_COLUMN].str.replace(
         '.', '').astype(float)
@@ -73,18 +88,21 @@ def execute():
     # Filtrando pela quantidade de imoveis superior ou igual a 5, fundos de papeis não tem imoveis
     # fiis_qtd_imoveis_maior_que_5 = tabela_customizada[tabela_customizada[QTDE_IMOVEIS] >= 3]
 
+    #####################################################################################
+    # FILTROS
+    #####################################################################################
+
     # Filtrando pela liquidez superior ou igual a 500 mil
     fiis_liquidez_maior_que_500_mil = tabela_customizada[
-        tabela_customizada[LIQUIDEZ_COLUMN] >= 500000]
+        tabela_customizada[LIQUIDEZ_COLUMN] >= args.liq]
 
     # Filtrando pela DY superior ou igual a 7%
     # fiis_dy_maior_que_6_perc = fiis_liquidez_maior_que_500_mil[ (fiis_liquidez_maior_que_500_mil['Dividend Yield'] >= 7) & (fiis_liquidez_maior_que_500_mil['Segmento'] == 'Shoppings')]
     fiis_dy_maior_que_6_perc = fiis_liquidez_maior_que_500_mil[(
-        fiis_liquidez_maior_que_500_mil[DY_COLUMN] >= 6)]
+        fiis_liquidez_maior_que_500_mil[DY_COLUMN] >= args.dy)]
 
     fiis_dy_maior_que_6_perc_ordenado_dy = fiis_dy_maior_que_6_perc.sort_values(
         by=DY_COLUMN, ascending=False)
-
 
     # tabela10 = tabela.head(10)
     fiis_dy_maior_que_6_perc_ordenado_dy['rank_dy'] = fiis_dy_maior_que_6_perc_ordenado_dy[DY_COLUMN].rank(
@@ -138,8 +156,10 @@ def execute():
     # print(resultado)
     print(f"rows: {resultado.shape[0]}")
 
+
 def format2decimal(valor):
     return float("{:.2f}".format(valor))
+
 
 execute()
 # A formula magica no mercado de ações - Joel oWarnei yuld alterado
