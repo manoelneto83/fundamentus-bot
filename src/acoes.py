@@ -65,6 +65,8 @@ RANK_RESULT = 'RANK_RESULTADO'
 
 
 def execute():
+    # Marca o tempo de início
+    inicioTempo = time.time()
     # Passo 2: requisicoes web
     navegador = openChrome()
     navegador.get("https://www.fundamentus.com.br/")
@@ -171,8 +173,8 @@ def execute():
 #################################################################################################################
     # Filtros
 #################################################################################################################
-    tabela_filtro_pvp = tabela_customizada[tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN] >= 1000000]
-    tabela_filtro_pvp = tabela_customizada[tabela_customizada[PVP_COLUMN] <= 900]
+    tabela_filtro_liq = tabela_customizada[tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN] >= 500000]
+    tabela_filtro_pvp = tabela_filtro_liq[tabela_filtro_liq[PVP_COLUMN] <= 900]
     tabela_filtro_roe = tabela_filtro_pvp[tabela_filtro_pvp[ROE_COLUMN] >= 13]
     tabela_filtro_roic = tabela_filtro_roe[tabela_filtro_roe[ROIC_COLUMN] >= 0]
 
@@ -188,8 +190,9 @@ def execute():
 
     tabela_filtro_dy = tabela_filtro_p_ebit[tabela_filtro_p_ebit[DY_COLUMN] >= 4]
 
-    # tabela_filtro_dy = tabela_filtro_dy.head(2)
-    remove_tasa(tabela_filtro_dy)
+    # tabela_filtro_dy = tabela_filtro_dy.head(10)
+
+    tabela_filtro_dy = remove_tasa(tabela_filtro_dy)
 
     for index, row in tabela_filtro_dy.iterrows():
         ativo = row[ATIVO_COLUMN]
@@ -307,12 +310,41 @@ def execute():
         tabela_filtro_dy[P_EBIT_COLUMN] + \
         tabela_filtro_dy[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN]
 
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=RANK_RESULT, ascending=True)
+    tabela_filtro_dy["RANK_POSICAO"] = tabela_filtro_dy[RANK_RESULT].rank(
+        ascending=True)
+
     # # # Use o método to_csv para exportar o DataFrame para um arquivo CSV
-    nome_arquivo_csv = 'meu_dataframe_acoes.csv'
-    tabela_filtro_dy.to_csv(nome_arquivo_csv, index=False,  decimal=',')
+    # nome_arquivo_csv = 'acoes.csv'
+    # tabela_filtro_dy.to_csv(nome_arquivo_csv, index=False,  decimal=',')
+    # Crie um arquivo Excel e adicione os DataFrames em abas separadas
+    with pd.ExcelWriter('acoes.xlsx') as writer:
+        tabela_filtro_dy.to_excel(writer, sheet_name='Geral', index=False)
+
+    # Remover repetições na coluna 'segmento'
+    list_segmentos = tabela_filtro_dy[SEGMENTO_COLUMN].unique()
+    # Remove os itens vazios da lista
+    list_segmentos = list(filter(None, list_segmentos))
+    print(f'list_segmentos: {list_segmentos}')
+    # Percorrer os segmentos e cria uma abas com os dados do segmento corrente.
+    for segmento in list_segmentos:
+        print(f'segmento corrente: {segmento}')
+        df_by_segmento = tabela_filtro_dy[tabela_filtro_dy[SEGMENTO_COLUMN] == segmento]
+        print(df_by_segmento)
+        with pd.ExcelWriter('acoes.xlsx', mode='a') as writer:
+            df_by_segmento.to_excel(
+                writer, sheet_name=segmento[:30], index=False)
 
     print(tabela_filtro_dy)
     print(f"rows: {tabela_filtro_dy.shape[0]}")
+
+    # Marca o tempo de término
+    fimTempo = time.time()
+
+    # Calcula o tempo decorrido
+    tempo_decorrido = fimTempo - inicioTempo
+    print(f"Tempo decorrido: {tempo_decorrido} segundos")
 
 
 def formatar_valor(valor):
@@ -332,10 +364,11 @@ def formatar_valor_percent(valor):
 
 
 def preco_justo_graham(navegador, index, tabela_filtro_dy):
-    print(f"antes passei aqui manoel {navegador}")
+    print("[IN] - preco_justo_graham")
+
     vpa = navegador.find_element(
         'xpath', '/html/body/main/div[2]/div/div[8]/div[2]/div/div[1]/div/div[9]/div/div/strong').text
-    print(f"passei aqui manoel")
+
     vpa = vpa.replace(",", ".")
 
     vpa = float(vpa)
@@ -367,6 +400,8 @@ def preco_justo_graham(navegador, index, tabela_filtro_dy):
     print(f"raiz-> {raiz}")
     valor_formatado = format2decimal(raiz)
     print(f"raiz valor_formatado -> {valor_formatado}")
+
+    print("[OUT] - preco_justo_graham")
     return valor_formatado
 
 
@@ -477,15 +512,18 @@ def preco_teto_bazim(navegador):
 
     return preco_teto
 
+
 def remove_tasa(df):
     for index, row in df.iterrows():
         ativo = row[ATIVO_COLUMN]
         print(ativo)
         # removendo a tauros
         if ativo == 'TASA4':
-            df = df.drop(index)        
+            df = df.drop(index)
         if ativo == 'TASA3':
-            df = df.drop(index)        
+            df = df.drop(index)
+
+    return df
 
 
 execute()
