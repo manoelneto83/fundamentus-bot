@@ -1,5 +1,4 @@
 logs/
 .env
 src/__pycache__/
-*.csv
 *.xlsx
