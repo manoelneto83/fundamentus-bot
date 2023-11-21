@@ -188,7 +188,8 @@ def execute():
     #     tabela_filtro_margem_liq[MARGEM_EBIT_COLUMN] >= 0]
     # tabela_filtro_p_ebit = tabela_filtro_margem_ebit[tabela_filtro_margem_ebit[P_EBIT_COLUMN] <= 10]
 
-    tabela_filtro_dy = tabela_filtro[tabela_filtro[DY_COLUMN] >= 4]
+    # tabela_filtro_dy = tabela_filtro[tabela_filtro[DY_COLUMN] >= 4]
+    tabela_filtro_dy = tabela_filtro[tabela_filtro[PL_COLUMN] > 0]
 
     # tabela_filtro_dy = tabela_filtro_dy.head(10)
 
@@ -204,12 +205,13 @@ def execute():
     tabela_filtro_dy[RANK_EV_EBIT] = tabela_filtro_dy[EV_EBIT_COLUMN].rank(
         ascending=True)
 
-    tabela_filtro_dy['RANK_MAGIC_FORMULE'] = tabela_filtro_dy[RANK_ROIC_COLUMN] + tabela_filtro_dy[RANK_EV_EBIT]
+    tabela_filtro_dy['RANK_MAGIC_FORMULE'] = tabela_filtro_dy[RANK_ROIC_COLUMN] + \
+        tabela_filtro_dy[RANK_EV_EBIT]
 
     tabela_filtro_dy = tabela_filtro_dy.sort_values(
         by='RANK_MAGIC_FORMULE', ascending=True)
 
-    #FILTRANDO PELAS 50 MELHORES ACOES COLOCADAS
+    # FILTRANDO PELAS 50 MELHORES ACOES COLOCADAS
     tabela_filtro_dy = tabela_filtro_dy.head(50)
 
     for index, row in tabela_filtro_dy.iterrows():
@@ -240,7 +242,7 @@ def execute():
             tabela_filtro_dy.at[index, GRAHAM_COLUMN] = 0
             tabela_filtro_dy.at[index, POTENCIAL_GRAHAM_COLUMN] = 0
 
-    #FAZER O RANK DE BAZIN E GHARAM
+    # FAZER O RANK DE BAZIN E GHARAM
     tabela_filtro_dy = tabela_filtro_dy.sort_values(
         by=POTENCIAL_GRAHAM_COLUMN, ascending=False)
     tabela_filtro_dy[RANK_POTENCIAL_GRAHAM_COLUMN] = tabela_filtro_dy[POTENCIAL_GRAHAM_COLUMN].rank(
@@ -251,8 +253,9 @@ def execute():
     tabela_filtro_dy[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN] = tabela_filtro_dy[MARGEM_SEGURANCA_BAZIN].rank(
         ascending=False)
 
-
-    tabela_filtro_dy[RANK_RESULT] = tabela_filtro_dy[RANK_ROIC_COLUMN] + tabela_filtro_dy[RANK_EV_EBIT] + tabela_filtro_dy[RANK_POTENCIAL_GRAHAM_COLUMN] + tabela_filtro_dy[RANK_EV_EBIT] + tabela_filtro_dy[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN]
+    tabela_filtro_dy[RANK_RESULT] = tabela_filtro_dy[RANK_ROIC_COLUMN] + tabela_filtro_dy[RANK_EV_EBIT] + \
+        tabela_filtro_dy[RANK_POTENCIAL_GRAHAM_COLUMN] + tabela_filtro_dy[RANK_EV_EBIT] + \
+        tabela_filtro_dy[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN]
 
     tabela_filtro_dy = tabela_filtro_dy.sort_values(
         by=RANK_RESULT, ascending=True)
