@@ -188,7 +188,8 @@ def execute():
         tabela_filtro_margem_liq[MARGEM_EBIT_COLUMN] >= 0]
     tabela_filtro_p_ebit = tabela_filtro_margem_ebit[tabela_filtro_margem_ebit[P_EBIT_COLUMN] <= 10]
 
-    tabela_filtro_dy = tabela_filtro_p_ebit[tabela_filtro_p_ebit[DY_COLUMN] >= 4]
+    tabela_filtro_dy = tabela_filtro_p_ebit[tabela_filtro_p_ebit[PL_COLUMN] > 0]
+    # tabela_filtro_dy = tabela_filtro_p_ebit[tabela_filtro_p_ebit[DY_COLUMN] >= 4]
 
     # tabela_filtro_dy = tabela_filtro_dy.head(10)
 
@@ -463,6 +464,9 @@ def preco_teto_bazim(navegador):
         'xpath', '/html/body/main/div[3]/div/div[1]/div/div[3]/div/div/div[2]/span[1]').text
     print(dividendo_ano_menos_4)
     time.sleep(0.5)
+    # movendo o mouse para uma posicao qualquer para evitar erros
+    pyautogui.moveTo(280, y+200, 0.5, pyautogui.easeOutQuad)    
+
     dividendo_ano_menos_1 = dividendo_ano_menos_1.replace(
         "R$ ", "").replace(",", ".")
     dividendo_ano_menos_2 = dividendo_ano_menos_2.replace(
