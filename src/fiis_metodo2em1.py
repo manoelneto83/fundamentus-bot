@@ -15,6 +15,7 @@ DY_COLUMN = 'Dividend Yield'
 PVP_COLUMN = 'P/VP'
 LIQUIDEZ_COLUMN = 'Liquidez'
 QTDE_IMOVEIS = 'Qtd de imóveis'
+VACANCIA_COLUMN = 'Vacância Média'
 
 # SEGMENTOS
 # Híbrido
@@ -23,6 +24,18 @@ QTDE_IMOVEIS = 'Qtd de imóveis'
 # Outros
 # Shoppings
 # Títulos e Val. Mob.
+
+#possiveis filtros a fazer
+  # liquidez
+  # dy (12m)
+  # pvp
+  # patrimonio liquido
+  # setor
+  # vacancia
+  # tx de administracao
+  # tx de performace
+  # localizacao
+  # relatórios gerenciais.
 
 
 def execute():
@@ -72,7 +85,8 @@ def execute():
                                 DY_COLUMN,
                                 PVP_COLUMN,
                                 LIQUIDEZ_COLUMN,
-                                QTDE_IMOVEIS]]
+                                QTDE_IMOVEIS,
+                                VACANCIA_COLUMN]]
 
     tabela_customizada.set_index(ATIVO_COLUMN)
     # Primeiro, remova os pontos da coluna de liquidez e converta para float
@@ -84,7 +98,10 @@ def execute():
     tabela_customizada[DY_COLUMN] = tabela_customizada[DY_COLUMN].str.replace(
         ',', '.').str.replace('%', '').astype(float)
 
-    # print(tabela_customizada)
+    tabela_customizada[VACANCIA_COLUMN] = tabela_customizada[VACANCIA_COLUMN].str.replace(
+        ',', '.').str.replace('%', '').astype(float)
+
+    print(tabela_customizada)
     # Filtrando pela quantidade de imoveis superior ou igual a 5, fundos de papeis não tem imoveis
     # fiis_qtd_imoveis_maior_que_5 = tabela_customizada[tabela_customizada[QTDE_IMOVEIS] >= 3]
 
@@ -128,6 +145,16 @@ def execute():
     with pd.ExcelWriter(nome_arquivo) as writer:
         df_resultado.to_excel(writer, sheet_name='Geral', index=False)
 
+    # Percorrer os segmentos e cria uma abas com os dados do segmento corrente.
+    print(f'segmento corrente: Tijolo')
+    df_by_tijolo = df_resultado[(df_resultado[QTDE_IMOVEIS] > 0) &  (df_resultado[SEGMENTO_COLUMN] != 'Títulos e Val. Mob.')]
+    print(df_by_tijolo)
+    if not (df_by_tijolo.empty):
+        with pd.ExcelWriter(nome_arquivo, mode='a') as writer:
+            df_by_tijolo.to_excel(
+                writer, sheet_name='Tijolo', index=False)
+
+
     # Remover repetições na coluna 'segmento'
     list_segmentos = df_resultado[SEGMENTO_COLUMN].unique()
     # Remove os itens vazios da lista
@@ -162,5 +189,3 @@ def format2decimal(valor):
 
 
 execute()
-# A formula magica no mercado de ações - Joel oWarnei yuld alterado
-# Filtros
