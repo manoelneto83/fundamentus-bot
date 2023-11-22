@@ -7,6 +7,11 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 import pandas as pd
 import argparse
+from datetime import datetime
+
+import requests
+from bs4 import BeautifulSoup
+import subprocess
 
 ATIVO_COLUMN = 'Papel'
 SEGMENTO_COLUMN = 'Segmento'
@@ -25,17 +30,17 @@ VACANCIA_COLUMN = 'Vacância Média'
 # Shoppings
 # Títulos e Val. Mob.
 
-#possiveis filtros a fazer
-  # liquidez
-  # dy (12m)
-  # pvp
-  # patrimonio liquido
-  # setor
-  # vacancia
-  # tx de administracao
-  # tx de performace
-  # localizacao
-  # relatórios gerenciais.
+# possiveis filtros a fazer
+# liquidez
+# dy (12m)
+# pvp
+# patrimonio liquido
+# setor
+# vacancia
+# tx de administracao
+# tx de performace
+# localizacao
+# relatórios gerenciais.
 
 
 def execute():
@@ -56,24 +61,46 @@ def execute():
     inicioTempo = time.time()
 
     # Passo 2: requisicoes web
-    navegador = openChrome()
-    navegador.get("https://www.fundamentus.com.br/")
+    # navegador = openChrome()
+    # navegador.get("https://www.fundamentus.com.br/")
 
     # Passo 3: clicar no botão fii
-    botao_fii = navegador.find_element(
-        'xpath', '/html/body/div[1]/div[1]/div[1]/span/a[2]')
-    navegador.execute_script("arguments[0].click();", botao_fii)
+    # botao_fii = navegador.find_element(
+    #     'xpath', '/html/body/div[1]/div[1]/div[1]/span/a[2]')
+    # navegador.execute_script("arguments[0].click();", botao_fii)
 
     # Passo 4: clicar no botão buscar
-    botao_buscar = navegador.find_element(
-        'xpath', '/html/body/div[1]/div[2]/form/input')
-    navegador.execute_script("arguments[0].click();", botao_buscar)
+    # botao_buscar = navegador.find_element(
+    #     'xpath', '/html/body/div[1]/div[2]/form/input')
+    # navegador.execute_script("arguments[0].click();", botao_buscar)
 
     # Passo 5: lendo os dados do html
-    tabela_elemento = navegador.find_element(
-        'xpath', '/html/body/div[1]/div[2]/table')
+    # tabela_elemento = navegador.find_element(
+    #     'xpath', '/html/body/div[1]/div[2]/table')
 
-    html_tabela = tabela_elemento.get_attribute('outerHTML')
+    # html_tabela = tabela_elemento.get_attribute('outerHTML')
+
+    # tabela = pd.read_html(str(html_tabela))[0]
+
+    base_url = "https://www.fundamentus.com.br/fii_resultado.php"
+# Realizar a requisição HTTP
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+    response = requests.get(base_url, headers=headers)
+    # Verificar se a requisição foi bem-sucedida
+    if response.status_code == 200:
+        # Fazer o parsing do HTML usando BeautifulSoup
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # Encontrar a tabela HTML (pode ser necessário inspecionar a página para obter o seletor correto)
+        html_tabela = soup.find("table")
+
+        # Ler a tabela HTML com pd.read_html
+        # df = pd.read_html(str(html_tabela))[0]  # Supondo que haja apenas uma tabela na página
+
+    else:
+        print("Falha na requisição HTTP. Código de status:", response.status_code)
+        raise
 
     tabela = pd.read_html(str(html_tabela))[0]
     tabela[COTACAO_COLUMN] = tabela[COTACAO_COLUMN].str.replace(
@@ -89,19 +116,19 @@ def execute():
                                 VACANCIA_COLUMN]]
 
     tabela_customizada.set_index(ATIVO_COLUMN)
+
     # Primeiro, remova os pontos da coluna de liquidez e converta para float
     tabela_customizada[LIQUIDEZ_COLUMN] = tabela_customizada[LIQUIDEZ_COLUMN].str.replace(
         '.', '').astype(float)
 
     # print(tabela_customizada)
     # Primeiro, substitua a virgula por ponto e remova o sinal de % e converta para float
-    tabela_customizada[DY_COLUMN] = tabela_customizada[DY_COLUMN].str.replace(
-        ',', '.').str.replace('%', '').astype(float)
-
+    tabela_customizada[DY_COLUMN] = pd.to_numeric(
+        tabela_customizada[DY_COLUMN].str.replace(',', '.').str.replace('%', ''), errors='coerce')
     tabela_customizada[VACANCIA_COLUMN] = tabela_customizada[VACANCIA_COLUMN].str.replace(
         ',', '.').str.replace('%', '').astype(float)
 
-    print(tabela_customizada)
+    # print(tabela_customizada[DY_COLUMN])
     # Filtrando pela quantidade de imoveis superior ou igual a 5, fundos de papeis não tem imoveis
     # fiis_qtd_imoveis_maior_que_5 = tabela_customizada[tabela_customizada[QTDE_IMOVEIS] >= 3]
 
@@ -146,14 +173,14 @@ def execute():
         df_resultado.to_excel(writer, sheet_name='Geral', index=False)
 
     # Percorrer os segmentos e cria uma abas com os dados do segmento corrente.
-    print(f'segmento corrente: Tijolo')
-    df_by_tijolo = df_resultado[(df_resultado[QTDE_IMOVEIS] > 0) &  (df_resultado[SEGMENTO_COLUMN] != 'Títulos e Val. Mob.')]
-    print(df_by_tijolo)
+    # print(f'segmento corrente: Tijolo')
+    df_by_tijolo = df_resultado[(df_resultado[QTDE_IMOVEIS] > 0) & (
+        df_resultado[SEGMENTO_COLUMN] != 'Títulos e Val. Mob.')]
+    # print(df_by_tijolo)
     if not (df_by_tijolo.empty):
         with pd.ExcelWriter(nome_arquivo, mode='a') as writer:
             df_by_tijolo.to_excel(
                 writer, sheet_name='Tijolo', index=False)
-
 
     # Remover repetições na coluna 'segmento'
     list_segmentos = df_resultado[SEGMENTO_COLUMN].unique()
@@ -187,5 +214,11 @@ def execute():
 def format2decimal(valor):
     return float("{:.2f}".format(valor))
 
+
+data_expiracao = datetime(2024, 12, 31)
+
+if datetime.now() > data_expiracao:
+    print("Por favor, obtenha uma versão mais recente.")
+    exit()
 
 execute()
