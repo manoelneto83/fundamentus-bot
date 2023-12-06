@@ -4,3 +4,4 @@ pip install pywin32
 pip install Pillow
 pip install python-dotenv
 pip install opencv-python
+pip install schedule

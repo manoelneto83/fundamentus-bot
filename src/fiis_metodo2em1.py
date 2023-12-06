@@ -50,6 +50,7 @@ def execute():
     parser.add_argument('--liq', type=float,
                         help='Valor para liquidez', default=500000)
     parser.add_argument('--dy', type=float, help='Valor para DY', default=6)
+    parser.add_argument('--pvp', type=float, help='Valor para PVP', default=30)
 
     # Parse dos argumentos da linha de comando
     args = parser.parse_args()
@@ -57,6 +58,7 @@ def execute():
     # Exibição dos argumentos recebidos
     print("Valor de liquidez:", args.liq)
     print("Valor de DY:", args.dy)
+    print("Valor de PVP:", args.pvp)
     # Marca o tempo de início
     inicioTempo = time.time()
 
@@ -145,6 +147,10 @@ def execute():
     fiis_dy_maior_que_6_perc = fiis_liquidez_maior_que_500_mil[(
         fiis_liquidez_maior_que_500_mil[DY_COLUMN] >= args.dy)]
 
+    # Filtrando pelo PVP superior a 0.30
+    fiis_dy_maior_que_6_perc = fiis_liquidez_maior_que_500_mil[(
+        fiis_liquidez_maior_que_500_mil[PVP_COLUMN] >= args.pvp)]
+
     fiis_dy_maior_que_6_perc_ordenado_dy = fiis_dy_maior_que_6_perc.sort_values(
         by=DY_COLUMN, ascending=False)
 
@@ -164,7 +170,11 @@ def execute():
 
     df_resultado['rank_posicao'] = df_resultado['metodo2em1'].rank()
 
-    nome_arquivo = 'fiis.xlsx'
+    # Obter a data atual no formato YYYY-MM-DD
+    data_atual = datetime.now().strftime('%Y-%m-%d')
+
+    # Criar o nome do arquivo com a data
+    nome_arquivo = f'fiis_{data_atual}.xlsx'
 
     # Use o método to_csv para exportar o DataFrame para um arquivo CSV
     # resultado.to_csv(nome_arquivo_csv, index=False,  decimal=',')
