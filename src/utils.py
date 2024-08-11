@@ -12,7 +12,11 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from os import environ, path, curdir
+import os
 from dotenv import load_dotenv
+import smtplib
+from email.message import EmailMessage
+
 # pyautogui.click -> clicar
 # pyautogui.press -> apertar 1 tecla
 # pyautogui.hotkey -> conjunto de teclas
@@ -110,6 +114,21 @@ def send_to_clipboard(filePath):
 
 
 def openChrome():
+    # Substitua pelo caminho real do chromedriver
+    basedir = path.abspath(curdir)
+    load_dotenv(path.join(basedir, '.env'))
+
+    path_web_driver = environ.get('PATH_WEB_DRIVER')
+    options = Options()
+    # Exemplo de como adicionar opções ao Chrome
+    options.add_argument("--start-maximized")
+
+    service = Service(executable_path=path_web_driver)
+    navegador = webdriver.Chrome(service=service, options=options)
+    return navegador
+
+
+def openChrome_old():
     # Find .env file
     basedir = path.abspath(curdir)
     load_dotenv(path.join(basedir, '.env'))
@@ -123,3 +142,31 @@ def openChrome():
     time.sleep(0.5)
     navegador.maximize_window()
     return navegador
+
+
+def sendEmail(content):
+    senha = os.environ.get('SENHA_EMAIL')
+    email_remetente = 'manoelneto83@gmail.com'
+    email_destinatario = os.environ.get('EMAIL_DESTINATARIO')
+
+    msg = EmailMessage()
+    msg['Subject'] = "Dividendos na Conta!"
+    msg['From'] = email_remetente
+    msg['To'] = email_destinatario
+
+    msg.set_content(f''' Você recebeu dividendos hoje,
+
+    {content.strip()}
+
+
+
+    Abs,
+
+    Notificador do Manel.
+
+    ''')
+
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        print('enviando email...')
+        smtp.login(email_remetente, senha)
+        smtp.send_message(msg)

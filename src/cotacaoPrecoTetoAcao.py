@@ -215,7 +215,7 @@ def execute():
             preco_justo = str(preco_justo_graham(navegador))
             print(f"preco_justo-> {preco_justo}")
 
-            # preco_teto = preco_teto_bazim(navegador, scrolls[i])
+            preco_teto = preco_teto_bazim(navegador, scrolls[i])
 
             openAndMaximizedApp(
                 "https://docs.google.com/spreadsheets/d/1ND_kM4sd0P3joJg4OSjFw4-6pYz4xL04aEpmZAkIn04/edit#gid=271190194", 5)

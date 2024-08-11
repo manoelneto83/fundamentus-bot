@@ -13,6 +13,14 @@ import pandas as pd
 import math
 from selenium.webdriver.common.action_chains import ActionChains
 
+ #- Filtrando as ações que tem um DY igual ou maior que 3;
+ #- fazendo um rank por ROIC
+ #- fazendo um rank por EV_EBIT
+ #- fazendo um rank por MAGIC_FORMULE = RANK ROIC + RANK EV_EBIT
+ #- fazendo um rank por graham
+ #- fazendo um rank resultado que é a soma dos ranks anteriores.
+ #- não esta levando em consideração o rank de pl, dy, divida_bruta etc.
+
 ATIVO_COLUMN = 'Papel'
 COTACAO_COLUMN = 'Cotação'
 PVP_COLUMN = 'P/VP'
@@ -53,15 +61,6 @@ RANK_EV_EBIT = 'rank_ev_ebit'
 RANK_EV_EBITDA = 'rank_ev_ebitda'
 RANK_P_EBIT = 'rank_p_ebit'
 RANK_RESULT = 'RANK_RESULTADO'
-
-
-# SEGMENTOS
-# Híbrido
-# Lajes Corporativas
-# Logística
-# Outros
-# Shoppings
-# Títulos e Val. Mob.
 
 
 def execute():
@@ -144,43 +143,43 @@ def execute():
 #################################################################################################################
     # tratando dados
 #################################################################################################################
-    tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN] = formatar_valor(
-        tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN])
-    tabela_customizada[PL_COLUMN] = formatar_valor(
-        tabela_customizada[PL_COLUMN])
-    tabela_customizada[PSR_COLUMN] = formatar_valor(
-        tabela_customizada[PSR_COLUMN])
-    tabela_customizada[EV_EBIT_COLUMN] = formatar_valor(
-        tabela_customizada[EV_EBIT_COLUMN])
-    tabela_customizada[EV_EBITDA_COLUMN] = formatar_valor(
-        tabela_customizada[EV_EBITDA_COLUMN])
-    tabela_customizada[P_EBIT_COLUMN] = formatar_valor(
-        tabela_customizada[P_EBIT_COLUMN])
+    tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN] = tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN].apply(
+        formatar_valor)
+    tabela_customizada[PL_COLUMN] = tabela_customizada[PL_COLUMN].apply(
+        formatar_valor)
+    tabela_customizada[PSR_COLUMN] = tabela_customizada[PSR_COLUMN].apply(
+        formatar_valor)
+    tabela_customizada[EV_EBIT_COLUMN] = tabela_customizada[EV_EBIT_COLUMN].apply(
+        formatar_valor)
+    tabela_customizada[EV_EBITDA_COLUMN] = tabela_customizada[EV_EBITDA_COLUMN].apply(
+        formatar_valor)
+    tabela_customizada[P_EBIT_COLUMN] = tabela_customizada[P_EBIT_COLUMN].apply(
+        formatar_valor)
     # print(tabela_customizada)
     # Primeiro, substitua a virgula por ponto e remova o sinal de % e converta para float
-    tabela_customizada[DY_COLUMN] = formatar_valor_percent(
-        tabela_customizada[DY_COLUMN])
-    tabela_customizada[ROIC_COLUMN] = formatar_valor_percent(
-        tabela_customizada[ROIC_COLUMN])
-    tabela_customizada[ROE_COLUMN] = formatar_valor_percent(
-        tabela_customizada[ROE_COLUMN])
-    tabela_customizada[MARGEM_EBIT_COLUMN] = formatar_valor_percent(
-        tabela_customizada[MARGEM_EBIT_COLUMN])
-    tabela_customizada[MARGEM_LIQ_COLUMN] = formatar_valor_percent(
-        tabela_customizada[MARGEM_LIQ_COLUMN])
-    tabela_customizada[CRESC_RECEITA_5A] = formatar_valor_percent(
-        tabela_customizada[CRESC_RECEITA_5A])
+    tabela_customizada[DY_COLUMN] = tabela_customizada[DY_COLUMN].apply(
+        formatar_valor_percent)
+    tabela_customizada[ROIC_COLUMN] = tabela_customizada[ROIC_COLUMN].apply(
+        formatar_valor_percent)
+    tabela_customizada[ROE_COLUMN] = tabela_customizada[ROE_COLUMN].apply(
+        formatar_valor_percent)
+    tabela_customizada[MARGEM_EBIT_COLUMN] = tabela_customizada[MARGEM_EBIT_COLUMN].apply(
+        formatar_valor_percent)
+    tabela_customizada[MARGEM_LIQ_COLUMN] = tabela_customizada[MARGEM_LIQ_COLUMN].apply(
+        formatar_valor_percent)
+    tabela_customizada[CRESC_RECEITA_5A] = tabela_customizada[CRESC_RECEITA_5A].apply(
+        formatar_valor_percent)
 #################################################################################################################
     # Filtros
 #################################################################################################################
-    tabela_filtro = tabela_customizada[tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN] >= 1000000]
+    tabela_filtro = tabela_customizada[tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN] >= 100]
     # tabela_filtro = tabela_filtro[tabela_filtro[PVP_COLUMN] <= 900]
     # tabela_filtro_roe = tabela_filtro_pvp[tabela_filtro_pvp[ROE_COLUMN] >= 13]
-    tabela_filtro = tabela_filtro[tabela_filtro[ROIC_COLUMN] >= 0]
+    # tabela_filtro = tabela_filtro[tabela_filtro[ROIC_COLUMN] >= 0]
 
     # ALGUNS SETORES COMO O BANCARIO TEM O PSR = 0
     # tabela_filtro_psr = tabela_filtro_roic[tabela_filtro_roic[PSR_COLUMN] >= 0]
-    # tabela_filtro_dy = tabela_filtro_roic[tabela_filtro_roic[DY_COLUMN] >= 4]
+    tabela_filtro = tabela_filtro[tabela_filtro[DY_COLUMN] >= 3]
 
     # ALGUNS SETORES COMO BANCARIOS E SEGUROS TEM ESSE INDICADOR = 0
     # tabela_filtro_margem_liq = tabela_filtro_psr[tabela_filtro_psr[MARGEM_LIQ_COLUMN] >= 0]
@@ -189,11 +188,14 @@ def execute():
     # tabela_filtro_p_ebit = tabela_filtro_margem_ebit[tabela_filtro_margem_ebit[P_EBIT_COLUMN] <= 10]
 
     # tabela_filtro_dy = tabela_filtro[tabela_filtro[DY_COLUMN] >= 4]
-    tabela_filtro_dy = tabela_filtro[tabela_filtro[PL_COLUMN] > 0]
+    # tabela_filtro_dy = tabela_filtro[tabela_filtro[PL_COLUMN] > 0]
 
     # tabela_filtro_dy = tabela_filtro_dy.head(10)
 
-    tabela_filtro_dy = remove_tasa(tabela_filtro_dy)
+    tabela_filtro_dy = remove_tasa(tabela_filtro)
+#################################################################################################################
+    # RANKS
+#################################################################################################################
 
     tabela_filtro_dy = tabela_filtro_dy.sort_values(
         by=ROIC_COLUMN, ascending=False)
@@ -211,8 +213,12 @@ def execute():
     tabela_filtro_dy = tabela_filtro_dy.sort_values(
         by='RANK_MAGIC_FORMULE', ascending=True)
 
-    # FILTRANDO PELAS 50 MELHORES ACOES COLOCADAS
-    tabela_filtro_dy = tabela_filtro_dy.head(50)
+
+#################################################################################################################
+    # FILTRANDO PELAS 200 MELHORES ACOES COLOCADAS
+#################################################################################################################
+
+    tabela_filtro_dy = tabela_filtro_dy.head(200)
 
     for index, row in tabela_filtro_dy.iterrows():
         ativo = row[ATIVO_COLUMN]
@@ -230,12 +236,12 @@ def execute():
             potencial = ((preco_justo/row[COTACAO_COLUMN])*100)-100
             tabela_filtro_dy.at[index, POTENCIAL_GRAHAM_COLUMN] = format2decimal(
                 potencial)
-            teto_bazin = format2decimal(preco_teto_bazim(navegador))
-            print(f"bazin preco teto -> {teto_bazin}")
-            tabela_filtro_dy.at[index, BAZIN_COLUMN] = teto_bazin
-            tabela_filtro_dy.at[index,
-                                MARGEM_SEGURANCA_BAZIN] = teto_bazin - row[COTACAO_COLUMN]
-            print(f"mergem bazin -> {teto_bazin - row[COTACAO_COLUMN]}")
+            # teto_bazin = format2decimal(preco_teto_bazim(navegador))
+            # print(f"bazin preco teto -> {teto_bazin}")
+            # tabela_filtro_dy.at[index, BAZIN_COLUMN] = teto_bazin
+            # tabela_filtro_dy.at[index,
+            #                     MARGEM_SEGURANCA_BAZIN] = teto_bazin - row[COTACAO_COLUMN]
+            # print(f"mergem bazin -> {teto_bazin - row[COTACAO_COLUMN]}")
 
         except Exception as err:
             imprimir(f"Ocorreu um erro: {err}")
@@ -248,25 +254,32 @@ def execute():
     tabela_filtro_dy[RANK_POTENCIAL_GRAHAM_COLUMN] = tabela_filtro_dy[POTENCIAL_GRAHAM_COLUMN].rank(
         ascending=False)
 
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(
-        by=MARGEM_SEGURANCA_BAZIN, ascending=False)
-    tabela_filtro_dy[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN] = tabela_filtro_dy[MARGEM_SEGURANCA_BAZIN].rank(
-        ascending=False)
+    # tabela_filtro_dy = tabela_filtro_dy.sort_values(
+    #     by=MARGEM_SEGURANCA_BAZIN, ascending=False)
+    # tabela_filtro_dy[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN] = tabela_filtro_dy[MARGEM_SEGURANCA_BAZIN].rank(
+    #     ascending=False)
 
     tabela_filtro_dy[RANK_RESULT] = tabela_filtro_dy[RANK_ROIC_COLUMN] + tabela_filtro_dy[RANK_EV_EBIT] + \
-        tabela_filtro_dy[RANK_POTENCIAL_GRAHAM_COLUMN] + tabela_filtro_dy[RANK_EV_EBIT] + \
-        tabela_filtro_dy[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN]
+        tabela_filtro_dy[RANK_POTENCIAL_GRAHAM_COLUMN] + \
+        tabela_filtro_dy[RANK_EV_EBIT]  # + \
+    # tabela_filtro_dy[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN]
 
     tabela_filtro_dy = tabela_filtro_dy.sort_values(
         by=RANK_RESULT, ascending=True)
     tabela_filtro_dy["RANK_POSICAO"] = tabela_filtro_dy[RANK_RESULT].rank(
         ascending=True)
+#################################################################################################################
+    # EXPORTANDO O ARQUIVO
+#################################################################################################################
 
     # # # Use o método to_csv para exportar o DataFrame para um arquivo CSV
     # nome_arquivo_csv = 'acoes.csv'
     # tabela_filtro_dy.to_csv(nome_arquivo_csv, index=False,  decimal=',')
     # Crie um arquivo Excel e adicione os DataFrames em abas separadas
-    nome_arquivo = 'acoes_magic_formule_bazin_graham.xlsx'
+    # Obter a data atual
+    data_atual = datetime.datetime.now().strftime('%Y-%m-%d')
+    # Nome do arquivo com a data adicionada
+    nome_arquivo = f'acoes_magic_formule_bazin_graham_{data_atual}.xlsx'
     with pd.ExcelWriter(nome_arquivo) as writer:
         tabela_filtro_dy.to_excel(writer, sheet_name='Geral', index=False)
 
@@ -296,17 +309,32 @@ def execute():
 
 
 def formatar_valor(valor):
+
+    # Se o valor não for string, converte para string
+    valor_str = str(valor)
+
     # Remove todos os pontos e vírgulas da string
-    valor_formatado = valor.str.replace(
-        '.', '').str.replace(',', '').astype(float) / 100
+    valor_str = valor_str.replace('.', '').replace(',', '').strip()
+
+    # Converte o valor para float e divide por 100 para formatar
+    try:
+        valor_formatado = float(valor_str) / 100
+    except ValueError:
+        # Caso haja algum problema na conversão, retorna 0.0
+        return 0.00
 
     return valor_formatado
 
 
 def formatar_valor_percent(valor):
+
+    # Se o valor não for string, converte para string
+    valor_str = str(valor)
     # Remove todos os pontos e vírgulas da string
-    valor_formatado = valor.str.replace('.', '').str.replace(
-        ',', '').str.replace('%', '').astype(float) / 100
+    valor_str = valor_str.replace('.', '').replace(
+        ',', '').replace('%', '').strip()
+    # convert para float
+    valor_formatado = float(valor_str) / 100
 
     return valor_formatado
 

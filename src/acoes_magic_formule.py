@@ -80,8 +80,8 @@ def execute():
 #################################################################################################################
     tabela_filtro_liq = tabela_customizada[tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN] >= 1000000]
     tabela_filtro_dy = tabela_filtro_liq[tabela_filtro_liq[ROIC_COLUMN] > 0]
-    tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[EV_EBIT_COLUMN] > 0]
-    tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_p_ebit[PL_COLUMN] > 0]
+    # tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[EV_EBIT_COLUMN] > 0]
+    # tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[PL_COLUMN] > 0]
     # tabela_filtro_dy = tabela_filtro_dy.head(10)
 
     tabela_filtro_dy = remove_tasa(tabela_filtro_dy)
