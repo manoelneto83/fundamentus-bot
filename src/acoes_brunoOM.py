@@ -13,8 +13,6 @@ import pandas as pd
 import math
 from selenium.webdriver.common.action_chains import ActionChains
 
-# BUSCA AS INFORMAÇÕES NO SITE FUNDAMENTOS SEM FAZER NENHUM FILTRO. TRAZENDO OS DADOS PUROS.
-
 ATIVO_COLUMN = 'Papel'
 COTACAO_COLUMN = 'Cotação'
 PVP_COLUMN = 'P/VP'
@@ -55,7 +53,18 @@ RANK_MARGEM_EBIT = 'rank_margem_ebit'
 RANK_EV_EBIT = 'rank_ev_ebit'
 RANK_EV_EBITDA = 'rank_ev_ebitda'
 RANK_P_EBIT = 'rank_p_ebit'
+RANK_LIQ_2MESES = 'rank_liq_2meses'
 RANK_RESULT = 'RANK_RESULTADO'
+RANK_PATRIMONIO_LIQUIDO = 'rank_patrimonio_liquido'
+
+
+# SEGMENTOS
+# Híbrido
+# Lajes Corporativas
+# Logística
+# Outros
+# Shoppings
+# Títulos e Val. Mob.
 
 
 def execute():
@@ -92,45 +101,46 @@ def execute():
     tabela_customizada = tabela[[ATIVO_COLUMN,
                                 COTACAO_COLUMN,
                                 PL_COLUMN,
-                                DY_COLUMN,
-                                PVP_COLUMN,
-                                ROIC_COLUMN,
                                 ROE_COLUMN,
+                                ROIC_COLUMN,
+                                CRESC_RECEITA_5A,
+                                DIV_BRUTA_PATRIM_COLUMN,
                                 LIQ_2MESES_COLUMN,
                                 PATRIMONIO_LIQUIDO_COLUMN,
-                                MARGEM_EBIT_COLUMN,
                                 MARGEM_LIQ_COLUMN,
-                                LIQ_CORRENTE_COLUMN,
-                                DIV_BRUTA_PATRIM_COLUMN,
-                                CRESC_RECEITA_5A,
-                                EV_EBIT_COLUMN,
-                                EV_EBITDA_COLUMN,
-                                P_EBIT_COLUMN
+                                PVP_COLUMN,
+                                DY_COLUMN
                                  ]]
+
+    tabela_customizada[GRAHAM_COLUMN] = 0.0
+    # tabela_customizada[BAZIN_COLUMN] = 0.0
+    tabela_customizada[POTENCIAL_GRAHAM_COLUMN] = 0.0
+    # tabela_customizada[MARGEM_SEGURANCA_BAZIN] = 0.0
 
     tabela_customizada[VPA_COLUMN] = 0.0
     tabela_customizada[LPA_COLUMN] = 0.0
-    tabela_customizada[GRAHAM_COLUMN] = 0.0
-    tabela_customizada[BAZIN_COLUMN] = 0.0
-    tabela_customizada[POTENCIAL_GRAHAM_COLUMN] = 0.0
-    tabela_customizada[MARGEM_SEGURANCA_BAZIN] = 0.0
-    # tabela_customizada[RANK_DY_COLUMN] = 0.0
-    # tabela_customizada[RANK_ROE_COLUMN] = 0.0
-    # tabela_customizada[RANK_ROIC_COLUMN] = 0.0
-    # tabela_customizada[RANK_POTENCIAL_GRAHAM_COLUMN] = 0.0
+
+    tabela_customizada[RANK_PL_COLUMN] = 0.0
+    tabela_customizada[RANK_ROE_COLUMN] = 0.0
+    tabela_customizada[RANK_DIV_BRUTA_PATRIM] = 0.0
+    tabela_customizada[RANK_CRESC_RECEITA_5A] = 0.0
+    tabela_customizada[RANK_LIQ_2MESES] = 0.0
+    tabela_customizada[RANK_PATRIMONIO_LIQUIDO] = 0.0
+    tabela_customizada[RANK_ROIC_COLUMN] = 0.0
+    tabela_customizada[RANK_DY_COLUMN] = 0.0
+    tabela_customizada[RANK_PVP_COLUMN] = 0.0
+    tabela_customizada[RANK_MARGEM_LIQ] = 0.0
+
+    tabela_customizada[RANK_POTENCIAL_GRAHAM_COLUMN] = 0.0
     # tabela_customizada[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN] = 0.0
-    # tabela_customizada[RANK_PVP_COLUMN] = 0.0
-    # tabela_customizada[RANK_PL_COLUMN] = 0.0
-    # tabela_customizada[RANK_MARGEM_LIQ] = 0.0
-    # tabela_customizada[RANK_CRESC_RECEITA_5A] = 0.0
-    # tabela_customizada[RANK_DIV_BRUTA_PATRIM] = 0.0
+
     # tabela_customizada[RANK_LIQ_CORRENTE] = 0.0
     # tabela_customizada[RANK_MARGEM_EBIT] = 0.0
     # tabela_customizada[RANK_EV_EBIT] = 0.0
     # tabela_customizada[RANK_EV_EBITDA] = 0.0
     # tabela_customizada[RANK_P_EBIT] = 0.0
 
-    # tabela_customizada[RANK_RESULT] = 0.0
+    tabela_customizada[RANK_RESULT] = 0.0
     tabela_customizada[SEGMENTO_COLUMN] = ''
 
     tabela_customizada.set_index(ATIVO_COLUMN)
@@ -142,17 +152,21 @@ def execute():
         formatar_valor)
     tabela_customizada[LIQ_2MESES_COLUMN] = tabela_customizada[LIQ_2MESES_COLUMN].apply(
         formatar_valor)
-
     tabela_customizada[PL_COLUMN] = tabela_customizada[PL_COLUMN].apply(
         formatar_valor)
-    tabela_customizada[PSR_COLUMN] = tabela_customizada[PSR_COLUMN].apply(
+    # tabela_customizada[PSR_COLUMN] = tabela_customizada[PSR_COLUMN].apply(
+    #     formatar_valor)
+    # tabela_customizada[EV_EBIT_COLUMN] = tabela_customizada[EV_EBIT_COLUMN].apply(
+    #     formatar_valor)
+    # tabela_customizada[EV_EBITDA_COLUMN] = tabela_customizada[EV_EBITDA_COLUMN].apply(
+    #     formatar_valor)
+    # tabela_customizada[P_EBIT_COLUMN] = tabela_customizada[P_EBIT_COLUMN].apply(
+    #     formatar_valor)
+    tabela_customizada[PVP_COLUMN] = tabela_customizada[PVP_COLUMN].apply(
         formatar_valor)
-    tabela_customizada[EV_EBIT_COLUMN] = tabela_customizada[EV_EBIT_COLUMN].apply(
-        formatar_valor)
-    tabela_customizada[EV_EBITDA_COLUMN] = tabela_customizada[EV_EBITDA_COLUMN].apply(
-        formatar_valor)
-    tabela_customizada[P_EBIT_COLUMN] = tabela_customizada[P_EBIT_COLUMN].apply(
-        formatar_valor)
+
+    print(f"empresas encontradas antes: {tabela_customizada.shape[0]}")
+
     # print(tabela_customizada)
     # Primeiro, substitua a virgula por ponto e remova o sinal de % e converta para float
     tabela_customizada[DY_COLUMN] = tabela_customizada[DY_COLUMN].apply(
@@ -161,8 +175,8 @@ def execute():
         formatar_valor_percent)
     tabela_customizada[ROE_COLUMN] = tabela_customizada[ROE_COLUMN].apply(
         formatar_valor_percent)
-    tabela_customizada[MARGEM_EBIT_COLUMN] = tabela_customizada[MARGEM_EBIT_COLUMN].apply(
-        formatar_valor_percent)
+    # tabela_customizada[MARGEM_EBIT_COLUMN] = tabela_customizada[MARGEM_EBIT_COLUMN].apply(
+    #     formatar_valor_percent)
     tabela_customizada[MARGEM_LIQ_COLUMN] = tabela_customizada[MARGEM_LIQ_COLUMN].apply(
         formatar_valor_percent)
     tabela_customizada[CRESC_RECEITA_5A] = tabela_customizada[CRESC_RECEITA_5A].apply(
@@ -170,114 +184,220 @@ def execute():
 #################################################################################################################
     # Filtros
 #################################################################################################################
-    tabela_filtro_dy = tabela_customizada[tabela_customizada[DY_COLUMN] >= 0]
-    # tabela_filtro = tabela_filtro[tabela_filtro[PVP_COLUMN] <= 900]
-    # tabela_filtro_roe = tabela_filtro_pvp[tabela_filtro_pvp[ROE_COLUMN] >= 13]
-    # tabela_filtro = tabela_filtro[tabela_filtro[ROIC_COLUMN] >= 0]
+    # tabela_filtro_dy = tabela_customizada[tabela_customizada[PL_COLUMN] > 0]
+    # tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[PL_COLUMN] < 21]
+    # tabela_filtro_dy = tabela_customizada[tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN] > 0]
+    # tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[ROE_COLUMN] >= 10]
+    # tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[ROIC_COLUMN] >= 15]
+    # tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[CRESC_RECEITA_5A] >= 10]
+    # tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[LIQ_2MESES_COLUMN] >= 1000000]
+    # tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[DIV_BRUTA_PATRIM_COLUMN] <= 1]
+    # tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[MARGEM_LIQ_COLUMN] >= 10]
+
+    tabela_filtro_dy = tabela_customizada[tabela_customizada[PL_COLUMN] > 0]
+    tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[PL_COLUMN] < 40]
+    print(f"empresas encontradas depois PL: {tabela_filtro_dy.shape[0]}")
+
+    tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[ROE_COLUMN] >= 6]
+    print(f"empresas encontradas depois ROE: {tabela_filtro_dy.shape[0]}")
+
+    tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[ROIC_COLUMN] >= 0]
+    print(f"empresas encontradas depois ROIC: {tabela_filtro_dy.shape[0]}")
+
+    tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[CRESC_RECEITA_5A] >= 0]
+    print(
+        f"empresas encontradas depois CRESC_RECEITA_5A: {tabela_filtro_dy.shape[0]}")
+
+    tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[LIQ_2MESES_COLUMN] >= 1000000]
+    print(
+        f"empresas encontradas depois LIQ_2MESES_COLUMN: {tabela_filtro_dy.shape[0]}")
+
+    tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[DIV_BRUTA_PATRIM_COLUMN] <= 2]
+    print(
+        f"empresas encontradas depois DIV_BRUTA_PATRIM_COLUMN: {tabela_filtro_dy.shape[0]}")
+
+    tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[PATRIMONIO_LIQUIDO_COLUMN] > 0]
+    print(
+        f"empresas encontradas depois PATRIMONIO_LIQUIDO_COLUMN: {tabela_filtro_dy.shape[0]}")
+
+    tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[MARGEM_LIQ_COLUMN] >= 0]
+    print(
+        f"empresas encontradas depois MARGEM_LIQ_COLUMN: {tabela_filtro_dy.shape[0]}")
+
+    # tabela_filtro_liq = tabela_filtro_liq[tabela_filtro_liq[PVP_COLUMN] <= 900]
 
     # ALGUNS SETORES COMO O BANCARIO TEM O PSR = 0
-    # tabela_filtro_psr = tabela_filtro_roic[tabela_filtro_roic[PSR_COLUMN] >= 0]
-    # tabela_filtro = tabela_filtro[tabela_filtro[DY_COLUMN] >= 3]
+    # tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[PSR_COLUMN] >= 0]
+    # tabela_filtro_dy = tabela_filtro_roic[tabela_filtro_roic[DY_COLUMN] >= 4]
 
     # ALGUNS SETORES COMO BANCARIOS E SEGUROS TEM ESSE INDICADOR = 0
-    # tabela_filtro_margem_liq = tabela_filtro_psr[tabela_filtro_psr[MARGEM_LIQ_COLUMN] >= 0]
-    # tabela_filtro_margem_ebit = tabela_filtro_margem_liq[
-    #     tabela_filtro_margem_liq[MARGEM_EBIT_COLUMN] >= 0]
+    # tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[MARGEM_LIQ_COLUMN] >= 10]
+
+    # tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[MARGEM_EBIT_COLUMN] >= 0]
     # tabela_filtro_p_ebit = tabela_filtro_margem_ebit[tabela_filtro_margem_ebit[P_EBIT_COLUMN] <= 10]
 
-    # tabela_filtro_dy = tabela_filtro[tabela_filtro[DY_COLUMN] >= 4]
-    # tabela_filtro_dy = tabela_filtro[tabela_filtro[PL_COLUMN] > 0]
+    # tabela_filtro_dy = tabela_filtro_dy[tabela_filtro_dy[DY_COLUMN] >= 4]
 
-    # tabela_filtro_dy = tabela_filtro_dy.head(10)
+    # tabela_filtro_dy = tabela_filtro_dy.head(5)
 
-    # tabela_filtro_dy = remove_tasa(tabela_filtro)
-#################################################################################################################
-    # RANKS
-#################################################################################################################
+    # tabela_filtro_dy = remove_tasa(tabela_filtro_dy)
+    print(f"empresas encontradas: {tabela_filtro_dy.shape[0]}")
+
+    for index, row in tabela_filtro_dy.iterrows():
+        ativo = row[ATIVO_COLUMN]
+        print(ativo)
+        baseUrl = "https://statusinvest.com.br/acoes/{}"
+        baseurl = baseUrl.format(ativo)
+        print(baseurl)
+        navegador.get(baseurl)
+        try:
+            if ativo == 'TASA4':
+                continue
+            if ativo == 'TASA3':
+                continue
+
+            preco_justo = float(preco_justo_graham(
+                navegador, index, tabela_filtro_dy))
+            # print(f"preco_justo-> {preco_justo}")
+            # print(f"preco_justo type-> {type(preco_justo)}")
+            # print(f"cotacao -> {row['Cotação']}")
+            print(f"cotacao type -> {type(row[COTACAO_COLUMN])}")
+            # print(f"calculo -> {(preco_justo/row['Cotação'])}")
+            tabela_filtro_dy.at[index,
+                                SEGMENTO_COLUMN] = getSegmentoEmpresa(navegador)
+            tabela_filtro_dy.at[index, GRAHAM_COLUMN] = preco_justo
+            potencial = ((preco_justo/row[COTACAO_COLUMN])*100)-100
+            tabela_filtro_dy.at[index, POTENCIAL_GRAHAM_COLUMN] = format2decimal(
+                potencial)
+            # teto_bazin = format2decimal(preco_teto_bazim(navegador))
+            # print(f"bazin preco teto -> {teto_bazin}")
+            # tabela_filtro_dy.at[index, BAZIN_COLUMN] = teto_bazin
+            # tabela_filtro_dy.at[index,
+            #                     MARGEM_SEGURANCA_BAZIN] = teto_bazin - row[COTACAO_COLUMN]
+            # print(f"mergem bazin -> {teto_bazin - row[COTACAO_COLUMN]}")
+
+        except Exception as err:
+            imprimir(f"Ocorreu um erro: {err}")
+            tabela_filtro_dy.at[index, GRAHAM_COLUMN] = 0
+            tabela_filtro_dy.at[index, POTENCIAL_GRAHAM_COLUMN] = 0
+
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=PL_COLUMN, ascending=True)
+    tabela_filtro_dy[RANK_PL_COLUMN] = tabela_filtro_dy[PL_COLUMN].rank(
+        ascending=True)
+
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=DY_COLUMN, ascending=False)
+    tabela_filtro_dy[RANK_DY_COLUMN] = tabela_filtro_dy[DY_COLUMN].rank(
+        ascending=False)
+
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=ROE_COLUMN, ascending=False)
+    tabela_filtro_dy[RANK_ROE_COLUMN] = tabela_filtro_dy[ROE_COLUMN].rank(
+        ascending=False)
+
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=ROIC_COLUMN, ascending=False)
+    tabela_filtro_dy[RANK_ROIC_COLUMN] = tabela_filtro_dy[ROIC_COLUMN].rank(
+        ascending=False)
+
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=POTENCIAL_GRAHAM_COLUMN, ascending=False)
+    tabela_filtro_dy[RANK_POTENCIAL_GRAHAM_COLUMN] = tabela_filtro_dy[POTENCIAL_GRAHAM_COLUMN].rank(
+        ascending=False)
 
     # tabela_filtro_dy = tabela_filtro_dy.sort_values(
-    #     by=ROIC_COLUMN, ascending=False)
-    # tabela_filtro_dy[RANK_ROIC_COLUMN] = tabela_filtro_dy[ROIC_COLUMN].rank(
+    #     by=LIQ_CORRENTE_COLUMN, ascending=False)
+    # tabela_filtro_dy[RANK_LIQ_CORRENTE] = tabela_filtro_dy[LIQ_CORRENTE_COLUMN].rank(
     #     ascending=False)
+
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=MARGEM_LIQ_COLUMN, ascending=False)
+    tabela_filtro_dy[RANK_MARGEM_LIQ] = tabela_filtro_dy[MARGEM_LIQ_COLUMN].rank(
+        ascending=False)
+
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=CRESC_RECEITA_5A, ascending=False)
+    tabela_filtro_dy[RANK_CRESC_RECEITA_5A] = tabela_filtro_dy[CRESC_RECEITA_5A].rank(
+        ascending=False)
+
+    # tabela_filtro_dy = tabela_filtro_dy.sort_values(
+    #     by=MARGEM_EBIT_COLUMN, ascending=False)
+    # tabela_filtro_dy[RANK_MARGEM_EBIT] = tabela_filtro_dy[MARGEM_EBIT_COLUMN].rank(
+    #     ascending=False)
+
+    # tabela_filtro_dy = tabela_filtro_dy.sort_values(
+    #     by=MARGEM_SEGURANCA_BAZIN, ascending=False)
+    # tabela_filtro_dy[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN] = tabela_filtro_dy[MARGEM_SEGURANCA_BAZIN].rank(
+    #     ascending=False)
+
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=PVP_COLUMN, ascending=True)
+    tabela_filtro_dy[RANK_PVP_COLUMN] = tabela_filtro_dy[PVP_COLUMN].rank(
+        ascending=True)
+
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=DIV_BRUTA_PATRIM_COLUMN, ascending=True)
+    tabela_filtro_dy[RANK_DIV_BRUTA_PATRIM] = tabela_filtro_dy[DIV_BRUTA_PATRIM_COLUMN].rank(
+        ascending=True)
+
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=PATRIMONIO_LIQUIDO_COLUMN, ascending=False)
+    tabela_filtro_dy[RANK_PATRIMONIO_LIQUIDO] = tabela_filtro_dy[RANK_PATRIMONIO_LIQUIDO].rank(
+        ascending=False)
+
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=LIQ_2MESES_COLUMN, ascending=False)
+    tabela_filtro_dy[RANK_LIQ_2MESES] = tabela_filtro_dy[RANK_LIQ_2MESES].rank(
+        ascending=False)
 
     # tabela_filtro_dy = tabela_filtro_dy.sort_values(
     #     by=EV_EBIT_COLUMN, ascending=True)
     # tabela_filtro_dy[RANK_EV_EBIT] = tabela_filtro_dy[EV_EBIT_COLUMN].rank(
     #     ascending=True)
 
-    # tabela_filtro_dy['RANK_MAGIC_FORMULE'] = tabela_filtro_dy[RANK_ROIC_COLUMN] + \
-    #     tabela_filtro_dy[RANK_EV_EBIT]
-
     # tabela_filtro_dy = tabela_filtro_dy.sort_values(
-    #     by='RANK_MAGIC_FORMULE', ascending=True)
-
-
-#################################################################################################################
-    # BUSCANDO INFORMACOES DE GRAHAM
-#################################################################################################################
-
-    # tabela_filtro_dy = tabela_filtro_dy.head(200)
-
-    # for index, row in tabela_filtro_dy.iterrows():
-    #     ativo = row[ATIVO_COLUMN]
-    #     print(ativo)
-    #     baseUrl = "https://statusinvest.com.br/acoes/{}"
-    #     baseurl = baseUrl.format(ativo)
-    #     print(baseurl)
-    #     navegador.get(baseurl)
-    #     try:
-    #         preco_justo = float(preco_justo_graham(
-    #             navegador, index, tabela_filtro_dy))
-    #         tabela_filtro_dy.at[index,
-    #                             SEGMENTO_COLUMN] = getSegmentoEmpresa(navegador)
-    #         tabela_filtro_dy.at[index, GRAHAM_COLUMN] = preco_justo
-    #         potencial = ((preco_justo/row[COTACAO_COLUMN])*100)-100
-    #         tabela_filtro_dy.at[index, POTENCIAL_GRAHAM_COLUMN] = format2decimal(
-    #             potencial)
-    #         # teto_bazin = format2decimal(preco_teto_bazim(navegador))
-    #         # print(f"bazin preco teto -> {teto_bazin}")
-    #         # tabela_filtro_dy.at[index, BAZIN_COLUMN] = teto_bazin
-    #         # tabela_filtro_dy.at[index,
-    #         #                     MARGEM_SEGURANCA_BAZIN] = teto_bazin - row[COTACAO_COLUMN]
-    #         # print(f"mergem bazin -> {teto_bazin - row[COTACAO_COLUMN]}")
-
-    #     except Exception as err:
-    #         imprimir(f"Ocorreu um erro: {err}")
-    #         tabela_filtro_dy.at[index, GRAHAM_COLUMN] = 0
-    #         tabela_filtro_dy.at[index, POTENCIAL_GRAHAM_COLUMN] = 0
-
-    # # FAZER O RANK DE BAZIN E GHARAM
-    # tabela_filtro_dy = tabela_filtro_dy.sort_values(
-    #     by=POTENCIAL_GRAHAM_COLUMN, ascending=False)
-    # tabela_filtro_dy[RANK_POTENCIAL_GRAHAM_COLUMN] = tabela_filtro_dy[POTENCIAL_GRAHAM_COLUMN].rank(
-    #     ascending=False)
-
-    # # tabela_filtro_dy = tabela_filtro_dy.sort_values(
-    # #     by=MARGEM_SEGURANCA_BAZIN, ascending=False)
-    # # tabela_filtro_dy[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN] = tabela_filtro_dy[MARGEM_SEGURANCA_BAZIN].rank(
-    # #     ascending=False)
-
-    # tabela_filtro_dy[RANK_RESULT] = tabela_filtro_dy[RANK_ROIC_COLUMN] + tabela_filtro_dy[RANK_EV_EBIT] + \
-    #     tabela_filtro_dy[RANK_POTENCIAL_GRAHAM_COLUMN] + \
-    #     tabela_filtro_dy[RANK_EV_EBIT]  # + \
-    # # tabela_filtro_dy[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN]
-
-    # tabela_filtro_dy = tabela_filtro_dy.sort_values(
-    #     by=RANK_RESULT, ascending=True)
-    # tabela_filtro_dy["RANK_POSICAO"] = tabela_filtro_dy[RANK_RESULT].rank(
+    #     by=EV_EBITDA_COLUMN, ascending=True)
+    # tabela_filtro_dy[RANK_EV_EBITDA] = tabela_filtro_dy[EV_EBITDA_COLUMN].rank(
     #     ascending=True)
-#################################################################################################################
-    # EXPORTANDO O ARQUIVO
-#################################################################################################################
+
+    # tabela_filtro_dy = tabela_filtro_dy.sort_values(
+    #     by=P_EBIT_COLUMN, ascending=True)
+    # tabela_filtro_dy[RANK_P_EBIT] = tabela_filtro_dy[P_EBIT_COLUMN].rank(
+    #     ascending=True)
+
+    # tabela_filtro_dy[RANK_RESULT] = tabela_filtro_dy[RANK_DY_COLUMN] + tabela_filtro_dy[RANK_ROE_COLUMN] + tabela_filtro_dy[RANK_ROIC_COLUMN] + tabela_filtro_dy[RANK_POTENCIAL_GRAHAM_COLUMN] + tabela_filtro_dy[RANK_PVP_COLUMN] + tabela_filtro_dy[RANK_PL_COLUMN] + tabela_filtro_dy[RANK_LIQ_CORRENTE] + \
+    #     tabela_filtro_dy[RANK_MARGEM_LIQ] + tabela_filtro_dy[RANK_CRESC_RECEITA_5A] + tabela_filtro_dy[RANK_DIV_BRUTA_PATRIM] + tabela_filtro_dy[RANK_MARGEM_EBIT] + \
+    #     tabela_filtro_dy[RANK_EV_EBIT] + tabela_filtro_dy[RANK_EV_EBITDA] + \
+    #     tabela_filtro_dy[P_EBIT_COLUMN] + \
+    #     tabela_filtro_dy[RANK_MARGEM_SEGURANCA_BAZIN_COLUMN]
+
+    tabela_filtro_dy[RANK_RESULT] = \
+        tabela_filtro_dy[RANK_ROE_COLUMN] + \
+        tabela_filtro_dy[RANK_POTENCIAL_GRAHAM_COLUMN] + \
+        tabela_filtro_dy[RANK_PL_COLUMN] + \
+        tabela_filtro_dy[RANK_CRESC_RECEITA_5A] + \
+        tabela_filtro_dy[RANK_DIV_BRUTA_PATRIM] + \
+        tabela_filtro_dy[RANK_ROIC_COLUMN] + \
+        tabela_filtro_dy[RANK_MARGEM_LIQ] + \
+        tabela_filtro_dy[RANK_PVP_COLUMN] + \
+        tabela_filtro_dy[RANK_PATRIMONIO_LIQUIDO] + \
+        tabela_filtro_dy[RANK_LIQ_2MESES]
+
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=RANK_RESULT, ascending=True)
+    tabela_filtro_dy["RANK_POSICAO"] = tabela_filtro_dy[RANK_RESULT].rank(
+        ascending=True)
 
     # # # Use o método to_csv para exportar o DataFrame para um arquivo CSV
     # nome_arquivo_csv = 'acoes.csv'
     # tabela_filtro_dy.to_csv(nome_arquivo_csv, index=False,  decimal=',')
     # Crie um arquivo Excel e adicione os DataFrames em abas separadas
-    # Obter a data atual
+
     data_atual = datetime.datetime.now().strftime('%Y-%m-%d')
     # Nome do arquivo com a data adicionada
-    nome_arquivo = f'acoes_fundamentus_puro_{data_atual}.xlsx'
+    nome_arquivo = f'acoes_BrunoOM_{data_atual}.xlsx'
+
     with pd.ExcelWriter(nome_arquivo) as writer:
         tabela_filtro_dy.to_excel(writer, sheet_name='Geral', index=False)
 
@@ -437,6 +557,9 @@ def preco_teto_bazim(navegador):
         'xpath', '/html/body/main/div[3]/div/div[1]/div/div[3]/div/div/div[2]/span[1]').text
     print(dividendo_ano_menos_4)
     time.sleep(0.5)
+    # movendo o mouse para uma posicao qualquer para evitar erros
+    pyautogui.moveTo(280, y+200, 0.5, pyautogui.easeOutQuad)
+
     dividendo_ano_menos_1 = dividendo_ano_menos_1.replace(
         "R$ ", "").replace(",", ".")
     dividendo_ano_menos_2 = dividendo_ano_menos_2.replace(
@@ -501,3 +624,6 @@ def remove_tasa(df):
 
 
 execute()
+
+
+# A formula magica no mercado de ações - Joel oWarnei yuld alterado

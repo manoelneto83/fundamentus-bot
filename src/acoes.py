@@ -144,44 +144,43 @@ def execute():
 #################################################################################################################
     # tratando dados
 #################################################################################################################
-    tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN] = formatar_valor(
-        tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN])
-    tabela_customizada[PL_COLUMN] = formatar_valor(
-        tabela_customizada[PL_COLUMN])
-    tabela_customizada[PSR_COLUMN] = formatar_valor(
-        tabela_customizada[PSR_COLUMN])
-    tabela_customizada[EV_EBIT_COLUMN] = formatar_valor(
-        tabela_customizada[EV_EBIT_COLUMN])
-    tabela_customizada[EV_EBITDA_COLUMN] = formatar_valor(
-        tabela_customizada[EV_EBITDA_COLUMN])
-    tabela_customizada[P_EBIT_COLUMN] = formatar_valor(
-        tabela_customizada[P_EBIT_COLUMN])
-
-    tabela_customizada[PVP_COLUMN] = formatar_valor(
-        tabela_customizada[PVP_COLUMN])
+    tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN] = tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN].apply(
+        formatar_valor)
+    tabela_customizada[PL_COLUMN] = tabela_customizada[PL_COLUMN].apply(
+        formatar_valor)
+    tabela_customizada[PSR_COLUMN] = tabela_customizada[PSR_COLUMN].apply(
+        formatar_valor)
+    tabela_customizada[EV_EBIT_COLUMN] = tabela_customizada[EV_EBIT_COLUMN].apply(
+        formatar_valor)
+    tabela_customizada[EV_EBITDA_COLUMN] = tabela_customizada[EV_EBITDA_COLUMN].apply(
+        formatar_valor)
+    tabela_customizada[P_EBIT_COLUMN] = tabela_customizada[P_EBIT_COLUMN].apply(
+        formatar_valor)
+    tabela_customizada[PVP_COLUMN] = tabela_customizada[PVP_COLUMN].apply(
+        formatar_valor)
 
     print(tabela_customizada[PVP_COLUMN])
 
     # print(tabela_customizada)
     # Primeiro, substitua a virgula por ponto e remova o sinal de % e converta para float
-    tabela_customizada[DY_COLUMN] = formatar_valor_percent(
-        tabela_customizada[DY_COLUMN])
-    tabela_customizada[ROIC_COLUMN] = formatar_valor_percent(
-        tabela_customizada[ROIC_COLUMN])
-    tabela_customizada[ROE_COLUMN] = formatar_valor_percent(
-        tabela_customizada[ROE_COLUMN])
-    tabela_customizada[MARGEM_EBIT_COLUMN] = formatar_valor_percent(
-        tabela_customizada[MARGEM_EBIT_COLUMN])
-    tabela_customizada[MARGEM_LIQ_COLUMN] = formatar_valor_percent(
-        tabela_customizada[MARGEM_LIQ_COLUMN])
-    tabela_customizada[CRESC_RECEITA_5A] = formatar_valor_percent(
-        tabela_customizada[CRESC_RECEITA_5A])
+    tabela_customizada[DY_COLUMN] = tabela_customizada[DY_COLUMN].apply(
+        formatar_valor_percent)
+    tabela_customizada[ROIC_COLUMN] = tabela_customizada[ROIC_COLUMN].apply(
+        formatar_valor_percent)
+    tabela_customizada[ROE_COLUMN] = tabela_customizada[ROE_COLUMN].apply(
+        formatar_valor_percent)
+    tabela_customizada[MARGEM_EBIT_COLUMN] = tabela_customizada[MARGEM_EBIT_COLUMN].apply(
+        formatar_valor_percent)
+    tabela_customizada[MARGEM_LIQ_COLUMN] = tabela_customizada[MARGEM_LIQ_COLUMN].apply(
+        formatar_valor_percent)
+    tabela_customizada[CRESC_RECEITA_5A] = tabela_customizada[CRESC_RECEITA_5A].apply(
+        formatar_valor_percent)
 #################################################################################################################
     # Filtros
 #################################################################################################################
     tabela_filtro_liq = tabela_customizada[tabela_customizada[PATRIMONIO_LIQUIDO_COLUMN] >= 500000]
     # tabela_filtro_liq = tabela_filtro_liq[tabela_filtro_liq[PVP_COLUMN] <= 900]
-    tabela_filtro_roe = tabela_filtro_liq[tabela_filtro_liq[ROE_COLUMN] >= 13]
+    tabela_filtro_roe = tabela_filtro_liq[tabela_filtro_liq[ROE_COLUMN] >= 6]
     tabela_filtro_roic = tabela_filtro_roe[tabela_filtro_roe[ROIC_COLUMN] >= 0]
 
     # ALGUNS SETORES COMO O BANCARIO TEM O PSR = 0
@@ -238,6 +237,11 @@ def execute():
     print(f"potencial type -> {type(row[POTENCIAL_GRAHAM_COLUMN])}")
 
     tabela_filtro_dy = tabela_filtro_dy.sort_values(
+        by=PL_COLUMN, ascending=True)
+    tabela_filtro_dy[RANK_PL_COLUMN] = tabela_filtro_dy[PL_COLUMN].rank(
+        ascending=True)
+
+    tabela_filtro_dy = tabela_filtro_dy.sort_values(
         by=DY_COLUMN, ascending=False)
     tabela_filtro_dy[RANK_DY_COLUMN] = tabela_filtro_dy[DY_COLUMN].rank(
         ascending=False)
@@ -285,11 +289,6 @@ def execute():
     tabela_filtro_dy = tabela_filtro_dy.sort_values(
         by=PVP_COLUMN, ascending=True)
     tabela_filtro_dy[RANK_PVP_COLUMN] = tabela_filtro_dy[PVP_COLUMN].rank(
-        ascending=True)
-
-    tabela_filtro_dy = tabela_filtro_dy.sort_values(
-        by=PL_COLUMN, ascending=True)
-    tabela_filtro_dy[RANK_PL_COLUMN] = tabela_filtro_dy[PL_COLUMN].rank(
         ascending=True)
 
     tabela_filtro_dy = tabela_filtro_dy.sort_values(

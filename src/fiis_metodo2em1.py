@@ -44,6 +44,7 @@ VACANCIA_COLUMN = 'Vacância Média'
 
 
 def execute():
+    print("executando fiis_metodo2em1...")
     # Criação do parser para os argumentos
     parser = argparse.ArgumentParser(
         description='Exemplo de script com argumentos via linha de comando')
@@ -61,28 +62,6 @@ def execute():
     print("Valor de PVP:", args.pvp)
     # Marca o tempo de início
     inicioTempo = time.time()
-
-    # Passo 2: requisicoes web
-    # navegador = openChrome()
-    # navegador.get("https://www.fundamentus.com.br/")
-
-    # Passo 3: clicar no botão fii
-    # botao_fii = navegador.find_element(
-    #     'xpath', '/html/body/div[1]/div[1]/div[1]/span/a[2]')
-    # navegador.execute_script("arguments[0].click();", botao_fii)
-
-    # Passo 4: clicar no botão buscar
-    # botao_buscar = navegador.find_element(
-    #     'xpath', '/html/body/div[1]/div[2]/form/input')
-    # navegador.execute_script("arguments[0].click();", botao_buscar)
-
-    # Passo 5: lendo os dados do html
-    # tabela_elemento = navegador.find_element(
-    #     'xpath', '/html/body/div[1]/div[2]/table')
-
-    # html_tabela = tabela_elemento.get_attribute('outerHTML')
-
-    # tabela = pd.read_html(str(html_tabela))[0]
 
     base_url = "https://www.fundamentus.com.br/fii_resultado.php"
 # Realizar a requisição HTTP
@@ -224,11 +203,5 @@ def execute():
 def format2decimal(valor):
     return float("{:.2f}".format(valor))
 
-
-data_expiracao = datetime(2024, 12, 31)
-
-if datetime.now() > data_expiracao:
-    print("Por favor, obtenha uma versão mais recente.")
-    exit()
 
 execute()
